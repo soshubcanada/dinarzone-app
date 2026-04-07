@@ -1,26 +1,244 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* DinarZone Color System */
+  --color-dz-green: #006633;
+  --color-dz-green-dark: #004D26;
+  --color-dz-green-darkest: #003318;
+  --color-dz-green-light: #00873E;
+  --color-dz-gold: #B8923B;
+  --color-dz-gold-light: #D4AF6A;
+  --color-dz-gold-muted: #D4C49A;
+  --color-dz-cream: #F5F3EC;
+  --color-dz-cream-light: #FBFAF7;
+  --color-dz-dark: #070B14;
+  --color-dz-dark-card: #0F1422;
+  --color-dz-text: #1A1F2E;
+  --color-dz-text-secondary: #5A6475;
+  --color-dz-text-muted: #8B9AAF;
+  --color-dz-border: #E0DBD0;
+  --color-dz-red: #D21034;
+  --color-dz-maroon: #8A184A;
+  --color-dz-success: #10B981;
+  --color-dz-warning: #F59E0B;
+
+  /* Typography */
+  --font-sans: 'Tajawal', sans-serif;
+  --font-heading: 'Cormorant Garamond', serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #F5F3EC;
+  --foreground: #1A1F2E;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #B8923B33 transparent;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* RTL Support */
+[dir="rtl"] body {
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #B8923B33; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #B8923B66; }
+
+/* Transfer status animations */
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 102, 51, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(0, 102, 51, 0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pulse-green { animation: pulse-green 2s infinite; }
+.animate-slide-up { animation: slide-up 0.4s ease-out; }
+
+/* Glass effect for cards */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(224, 219, 208, 0.5);
+}
+
+/* Gradient text */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #B8923B, #D4AF6A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* === WISE/REVOLUT PREMIUM ADDITIONS === */
+
+/* Smooth page transitions */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes stagger-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes check-draw {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes check-circle-scale {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(80px) rotate(360deg); opacity: 0; }
+}
+
+.animate-fade-in { animation: fade-in 0.3s ease-out; }
+.animate-scale-in { animation: scale-in 0.3s ease-out; }
+.animate-stagger-in { animation: stagger-in 0.4s ease-out both; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-check { stroke-dasharray: 100; animation: check-draw 0.6s ease-out forwards; }
+.animate-check-circle { animation: check-circle-scale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+/* Stagger delay utilities */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* Shimmer skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #f0ede5 25%, #faf8f3 50%, #f0ede5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Card tap/press feedback (Revolut style) */
+.card-press {
+  transition: all 0.15s ease;
+}
+.card-press:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* Focus visible (Wise accessibility) */
+*:focus-visible {
+  outline: 2px solid #006633;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Premium gradient button */
+.btn-gradient {
+  background: linear-gradient(135deg, #006633 0%, #00873E 100%);
+  transition: all 0.2s ease;
+}
+.btn-gradient:hover {
+  background: linear-gradient(135deg, #004D26 0%, #006633 100%);
+  box-shadow: 0 8px 25px -5px rgba(0, 102, 51, 0.4);
+  transform: translateY(-1px);
+}
+.btn-gradient:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px -3px rgba(0, 102, 51, 0.3);
+}
+
+/* Wise-style subtle card shadows */
+.card-elevated {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-elevated:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.06);
+}
+
+/* Number highlight animation */
+.number-highlight {
+  animation: count-up 0.5s ease-out both;
+}
+
+/* Hide scrollbar but keep scroll */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Revolut-style dark gradient header */
+.header-gradient {
+  background: linear-gradient(180deg, #070B14 0%, #0F1422 100%);
+}
+
+/* Input focus ring (Wise style - green glow) */
+input:focus, select:focus, textarea:focus {
+  border-color: #006633 !important;
+  box-shadow: 0 0 0 3px rgba(0, 102, 51, 0.12) !important;
+}
+
+/* Wise-style divider */
+.divider-subtle {
+  border-color: rgba(224, 219, 208, 0.4);
+}
+
+/* Safe area padding for mobile */
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+}
+
+/* Frosted glass - premium version */
+.glass-premium {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Subtle page background gradient */
+.bg-subtle-gradient {
+  background: linear-gradient(180deg, #F5F3EC 0%, #FBFAF7 50%, #F5F3EC 100%);
 }
