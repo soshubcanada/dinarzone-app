@@ -12,11 +12,12 @@ const FLAG_MAP: Record<string, string> = {
 
 interface FlagIconProps {
   countryCode: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   className?: string;
 }
 
 const sizeClasses = {
+  xs: "text-sm",
   sm: "text-lg",
   md: "text-2xl",
   lg: "text-4xl",
