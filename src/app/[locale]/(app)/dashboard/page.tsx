@@ -38,7 +38,7 @@ const STATUS_MAP: Record<string, { label: string; color: "green" | "gold" | "red
   cancelled: { label: "Annule", color: "red" },
 };
 
-/* ---- Promo banners (Talabat/Snoonu style) ---- */
+/* ---- Promo banners (Talabat/Snoonu style) with original SVG illustrations ---- */
 const PROMO_BANNERS = [
   {
     id: "ramadan",
@@ -48,9 +48,22 @@ const PROMO_BANNERS = [
     subtitle: "Sur votre premier transfert vers l'Algerie",
     cta: "Envoyer maintenant",
     href: "/send?to=DZ",
-    icon: (
-      <svg className="w-16 h-16 text-white/20" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M21.721 12.752a9.711 9.711 0 0 0-.945-5.003 12.754 12.754 0 0 1-4.339 2.708 18.991 18.991 0 0 1-.214 4.772 17.165 17.165 0 0 0 5.498-2.477ZM14.634 15.55a17.324 17.324 0 0 0 .332-4.647c-.952.227-1.945.347-2.966.347-1.021 0-2.014-.12-2.966-.347a17.515 17.515 0 0 0 .332 4.647 17.385 17.385 0 0 0 5.268 0ZM9.772 17.119a18.963 18.963 0 0 0 4.456 0A17.182 17.182 0 0 1 12 21.724a17.18 17.18 0 0 1-2.228-4.605ZM7.777 15.23a18.87 18.87 0 0 1-.214-4.774 12.753 12.753 0 0 1-4.34-2.708 9.711 9.711 0 0 0-.944 5.004 17.165 17.165 0 0 0 5.498 2.477ZM21.356 14.752a9.765 9.765 0 0 1-7.478 6.817 18.64 18.64 0 0 0 1.988-4.718 18.627 18.627 0 0 0 5.49-2.098ZM2.644 14.752c1.682.971 3.53 1.688 5.49 2.099a18.64 18.64 0 0 0 1.988 4.718 9.765 9.765 0 0 1-7.478-6.816ZM13.878 2.43a9.755 9.755 0 0 1 6.116 3.986 11.267 11.267 0 0 1-3.746 2.504 18.63 18.63 0 0 0-2.37-6.49ZM12 2.276a17.152 17.152 0 0 1 2.805 7.121c-.897.23-1.837.353-2.805.353-.968 0-1.908-.122-2.805-.353A17.151 17.151 0 0 1 12 2.276ZM10.122 2.43a18.629 18.629 0 0 0-2.37 6.49 11.266 11.266 0 0 1-3.746-2.504 9.754 9.754 0 0 1 6.116-3.985Z" />
+    illustration: (
+      <svg className="w-28 h-28" viewBox="0 0 120 120" fill="none">
+        {/* Crescent moon */}
+        <circle cx="60" cy="45" r="28" fill="white" opacity="0.15" />
+        <circle cx="70" cy="38" r="24" fill="#006633" />
+        {/* Star */}
+        <polygon points="55,30 57,36 63,36 58,40 60,46 55,42 50,46 52,40 47,36 53,36" fill="white" opacity="0.2" />
+        {/* Gift/money envelope */}
+        <rect x="35" y="65" width="50" height="35" rx="6" fill="white" opacity="0.15" />
+        <path d="M35 73 L60 88 L85 73" stroke="white" strokeWidth="2" opacity="0.2" fill="none" />
+        {/* Dollar sign in envelope */}
+        <text x="60" y="85" textAnchor="middle" fontSize="16" fill="white" fontWeight="bold" opacity="0.2">$0</text>
+        {/* Sparkles */}
+        <circle cx="90" cy="30" r="2" fill="white" opacity="0.3" />
+        <circle cx="30" cy="50" r="1.5" fill="white" opacity="0.2" />
+        <circle cx="95" cy="60" r="1" fill="white" opacity="0.25" />
       </svg>
     ),
   },
@@ -62,9 +75,31 @@ const PROMO_BANNERS = [
     subtitle: "Pour chaque ami qui envoie son premier transfert",
     cta: "Inviter un ami",
     href: "/profile",
-    icon: (
-      <svg className="w-16 h-16 text-white/20" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M8.25 6.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM15.75 9.75a3 3 0 116 0 3 3 0 01-6 0zM2.25 9.75a3 3 0 116 0 3 3 0 01-6 0zM6.31 15.117A6.745 6.745 0 0112 12a6.745 6.745 0 016.709 7.498.75.75 0 01-.372.568A18.365 18.365 0 0112 21.75c-2.331 0-4.512-.645-6.374-1.766a.75.75 0 01-.245-.932 6.75 6.75 0 01.929-1.935zM22.125 15.769a.75.75 0 010 .354c-.073.294-.17.585-.29.868-.09.209-.245.381-.422.463a15.64 15.64 0 01-2.198.882.75.75 0 01-.508-.07 6.7 6.7 0 00-1.707-2.946 1.884 1.884 0 01-.068-.116.75.75 0 01.345-.855 6.747 6.747 0 014.848-.605zM1.875 15.769a6.747 6.747 0 014.848.605.75.75 0 01.345.855 1.884 1.884 0 01-.068.116 6.7 6.7 0 00-1.707 2.946.75.75 0 01-.508.07 15.64 15.64 0 01-2.198-.882c-.177-.082-.332-.254-.422-.463a5.414 5.414 0 01-.29-.868.75.75 0 010-.354z" />
+    illustration: (
+      <svg className="w-28 h-28" viewBox="0 0 120 120" fill="none">
+        {/* Two people connected */}
+        <circle cx="42" cy="40" r="14" fill="white" opacity="0.12" />
+        <circle cx="42" cy="35" r="8" fill="white" opacity="0.15" />
+        <ellipse cx="42" cy="55" rx="14" ry="10" fill="white" opacity="0.12" />
+        <circle cx="78" cy="40" r="14" fill="white" opacity="0.12" />
+        <circle cx="78" cy="35" r="8" fill="white" opacity="0.15" />
+        <ellipse cx="78" cy="55" rx="14" ry="10" fill="white" opacity="0.12" />
+        {/* Connection line with heart */}
+        <line x1="52" y1="42" x2="68" y2="42" stroke="#D4AF6A" strokeWidth="2" opacity="0.4" strokeDasharray="4 3">
+          <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1.5s" repeatCount="indefinite" />
+        </line>
+        {/* Gift box */}
+        <rect x="42" y="72" width="36" height="28" rx="5" fill="white" opacity="0.15" />
+        <line x1="60" y1="72" x2="60" y2="100" stroke="white" strokeWidth="2" opacity="0.1" />
+        <rect x="42" y="72" width="36" height="8" rx="3" fill="#D4AF6A" opacity="0.2" />
+        {/* Ribbon */}
+        <path d="M56 72 L60 65 L64 72" stroke="#D4AF6A" strokeWidth="2" fill="none" opacity="0.3" />
+        {/* $10 */}
+        <text x="60" y="93" textAnchor="middle" fontSize="12" fill="white" fontWeight="bold" opacity="0.25">$10</text>
+        {/* Sparkles */}
+        <circle cx="30" cy="25" r="2" fill="#D4AF6A" opacity="0.3" />
+        <circle cx="95" cy="30" r="1.5" fill="white" opacity="0.2" />
+        <circle cx="100" cy="80" r="2" fill="#D4AF6A" opacity="0.2" />
       </svg>
     ),
   },
@@ -76,9 +111,25 @@ const PROMO_BANNERS = [
     subtitle: "+200 points de retrait en Algerie et Tunisie",
     cta: "Voir les agents",
     href: "/agents",
-    icon: (
-      <svg className="w-16 h-16 text-white/20" viewBox="0 0 24 24" fill="currentColor">
-        <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+    illustration: (
+      <svg className="w-28 h-28" viewBox="0 0 120 120" fill="none">
+        {/* Map pin */}
+        <path d="M60 15 C40 15 28 30 28 48 C28 70 60 100 60 100 C60 100 92 70 92 48 C92 30 80 15 60 15Z" fill="white" opacity="0.1" />
+        <circle cx="60" cy="45" r="14" fill="white" opacity="0.15" />
+        {/* Store/agent icon inside pin */}
+        <rect x="50" y="40" width="20" height="14" rx="2" fill="white" opacity="0.2" />
+        <path d="M48 40 L60 32 L72 40" stroke="white" strokeWidth="2" fill="none" opacity="0.2" />
+        {/* Cash bills */}
+        <rect x="20" y="70" width="30" height="18" rx="3" fill="white" opacity="0.12" transform="rotate(-15, 35, 79)" />
+        <rect x="70" y="68" width="30" height="18" rx="3" fill="white" opacity="0.12" transform="rotate(10, 85, 77)" />
+        {/* Coins */}
+        <circle cx="45" cy="90" r="8" fill="#D4AF6A" opacity="0.15" />
+        <circle cx="48" cy="87" r="8" fill="white" opacity="0.1" />
+        {/* Signal waves from pin */}
+        <circle cx="60" cy="45" r="24" stroke="white" strokeWidth="1" opacity="0.08" />
+        <circle cx="60" cy="45" r="34" stroke="white" strokeWidth="1" opacity="0.05" />
+        {/* +200 */}
+        <text x="85" y="55" fontSize="11" fill="white" fontWeight="bold" opacity="0.2">+200</text>
       </svg>
     ),
   },
@@ -132,9 +183,9 @@ function PromoCarousel({ locale }: { locale: string }) {
     <div className="relative">
       <Link href={`/${locale}${banner.href}`} className="block">
         <div className={`${banner.gradient} rounded-2xl p-5 overflow-hidden relative min-h-[140px] card-press`}>
-          {/* Background icon */}
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-60">
-            {banner.icon}
+          {/* Illustrated background */}
+          <div className="absolute right-1 top-1/2 -translate-y-1/2">
+            {banner.illustration}
           </div>
           {/* Content */}
           <div className="relative z-10">
@@ -209,45 +260,178 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* 2. Welcome card + balance (Uber hero) */}
-      <Card variant="dark" padding="lg" className="bg-gradient-to-br from-dz-green-darkest via-dz-dark to-dz-dark-card overflow-hidden relative animate-stagger-in stagger-2">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-dz-green/5 rounded-full -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-4 w-24 h-24 bg-dz-gold/5 rounded-full translate-y-1/2" />
+      {/* 2. Welcome hero — illustrated SVG scene */}
+      <div className="rounded-2xl overflow-hidden relative animate-stagger-in stagger-2">
+        {/* Illustrated background — original SVG scene */}
+        <div className="absolute inset-0">
+          <svg className="w-full h-full" viewBox="0 0 800 320" fill="none" preserveAspectRatio="xMidYMid slice">
+            {/* Sky gradient */}
+            <defs>
+              <linearGradient id="sky" x1="0" y1="0" x2="800" y2="320" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#003318" />
+                <stop offset="40%" stopColor="#004D26" />
+                <stop offset="100%" stopColor="#0a2f1a" />
+              </linearGradient>
+              <linearGradient id="goldBeam" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#B8923B" stopOpacity="0" />
+                <stop offset="50%" stopColor="#D4AF6A" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#B8923B" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="groundGrad" x1="0" y1="240" x2="0" y2="320" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#003318" stopOpacity="0" />
+                <stop offset="100%" stopColor="#001a0d" stopOpacity="0.5" />
+              </linearGradient>
+              <radialGradient id="glowGreen" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#00873E" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#00873E" stopOpacity="0" />
+              </radialGradient>
+              <radialGradient id="glowGold" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#D4AF6A" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#D4AF6A" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            <rect width="800" height="320" fill="url(#sky)" />
 
-        <div className="relative flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-dz-green/20 border border-dz-green/30 flex items-center justify-center animate-bounce-in">
-              <span className="text-lg font-bold text-dz-green-light">{MOCK_USER.name[0]}</span>
-            </div>
-            <div>
-              <p className="text-white/40 text-[11px] font-medium uppercase tracking-widest">Bienvenue</p>
-              <h2 className="text-xl font-bold text-white">{MOCK_USER.name}</h2>
-            </div>
-          </div>
-          <Badge color="gold">
-            <svg className="w-3 h-3 mr-0.5" viewBox="0 0 24 24" fill="currentColor">
-              <path fillRule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.749.749 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
-            </svg>
-            {MOCK_USER.kycLabel}
-          </Badge>
+            {/* Stars / dots */}
+            <circle cx="120" cy="40" r="1.5" fill="white" opacity="0.3" />
+            <circle cx="300" cy="25" r="1" fill="white" opacity="0.2" />
+            <circle cx="500" cy="50" r="1.5" fill="white" opacity="0.25" />
+            <circle cx="680" cy="35" r="1" fill="white" opacity="0.3" />
+            <circle cx="750" cy="70" r="1.5" fill="white" opacity="0.15" />
+            <circle cx="50" cy="80" r="1" fill="white" opacity="0.2" />
+
+            {/* Stylized Canada (left) — CN Tower silhouette */}
+            <g opacity="0.15">
+              <rect x="80" y="130" width="4" height="110" rx="2" fill="white" />
+              <rect x="74" y="170" width="16" height="30" rx="3" fill="white" />
+              <circle cx="82" cy="150" r="8" fill="white" />
+              {/* Buildings */}
+              <rect x="50" y="200" width="18" height="40" rx="2" fill="white" />
+              <rect x="100" y="190" width="14" height="50" rx="2" fill="white" />
+              <rect x="120" y="210" width="20" height="30" rx="2" fill="white" />
+            </g>
+
+            {/* Stylized Algeria / Tunisia (right) — Mosque + Casbah */}
+            <g opacity="0.15">
+              {/* Minaret */}
+              <rect x="680" y="140" width="5" height="100" rx="2" fill="white" />
+              <circle cx="682.5" cy="140" r="6" fill="white" />
+              {/* Dome */}
+              <ellipse cx="720" cy="200" rx="25" ry="18" fill="white" />
+              <rect x="695" y="200" width="50" height="40" rx="2" fill="white" />
+              {/* Casbah buildings */}
+              <rect x="640" y="210" width="22" height="30" rx="2" fill="white" />
+              <rect x="750" y="195" width="18" height="45" rx="2" fill="white" />
+            </g>
+
+            {/* Transfer arc — golden corridor line */}
+            <path d="M 150 200 Q 400 60 650 200" stroke="url(#goldBeam)" strokeWidth="2.5" strokeDasharray="8 6" fill="none" opacity="0.8">
+              <animate attributeName="stroke-dashoffset" from="0" to="-28" dur="2s" repeatCount="indefinite" />
+            </path>
+
+            {/* Money packet traveling along the arc */}
+            <g opacity="0.9">
+              <circle r="10" fill="#D4AF6A" opacity="0.9">
+                <animateMotion dur="3s" repeatCount="indefinite" path="M 150 200 Q 400 60 650 200" />
+              </circle>
+              <text fontSize="8" fill="#003318" fontWeight="bold" textAnchor="middle" dy="3">
+                <animateMotion dur="3s" repeatCount="indefinite" path="M 150 200 Q 400 60 650 200" />
+                $
+              </text>
+            </g>
+
+            {/* Second arc — green (return flow) */}
+            <path d="M 650 220 Q 400 280 150 220" stroke="#00873E" strokeWidth="1.5" strokeDasharray="4 6" fill="none" opacity="0.3">
+              <animate attributeName="stroke-dashoffset" from="0" to="20" dur="3s" repeatCount="indefinite" />
+            </path>
+
+            {/* Globe glow left */}
+            <circle cx="150" cy="200" r="80" fill="url(#glowGreen)" />
+            {/* Globe glow right */}
+            <circle cx="650" cy="200" r="80" fill="url(#glowGold)" />
+
+            {/* Country circles — sender */}
+            <circle cx="150" cy="200" r="22" fill="#006633" stroke="white" strokeWidth="1.5" opacity="0.9" />
+            <text x="150" y="196" textAnchor="middle" fontSize="14" fill="white" dy="5">CA</text>
+
+            {/* Country circles — receiver */}
+            <circle cx="650" cy="200" r="22" fill="#B8923B" stroke="white" strokeWidth="1.5" opacity="0.9" />
+            <text x="650" y="196" textAnchor="middle" fontSize="14" fill="white" dy="5">DZ</text>
+
+            {/* Middle hub — DinarZone logo concept */}
+            <circle cx="400" cy="130" r="28" fill="#006633" stroke="#D4AF6A" strokeWidth="2" opacity="0.9" />
+            <text x="400" y="126" textAnchor="middle" fontSize="18" fill="white" fontWeight="bold" dy="5">DZ</text>
+
+            {/* Radiating connection lines from hub */}
+            <line x1="400" y1="158" x2="320" y2="250" stroke="#00873E" strokeWidth="1" opacity="0.2" strokeDasharray="3 4" />
+            <line x1="400" y1="158" x2="480" y2="250" stroke="#00873E" strokeWidth="1" opacity="0.2" strokeDasharray="3 4" />
+
+            {/* Small service icons along the arc */}
+            {/* Cash icon */}
+            <g transform="translate(280, 115)" opacity="0.5">
+              <rect width="24" height="16" rx="3" fill="white" />
+              <circle cx="12" cy="8" r="4" fill="#006633" />
+            </g>
+            {/* Phone/mobile icon */}
+            <g transform="translate(500, 115)" opacity="0.5">
+              <rect x="3" width="16" height="24" rx="3" fill="white" />
+              <circle cx="11" cy="20" r="2" fill="#006633" />
+              <rect x="7" y="3" width="8" height="12" rx="1" fill="#006633" opacity="0.3" />
+            </g>
+
+            {/* Ground gradient overlay */}
+            <rect y="240" width="800" height="80" fill="url(#groundGrad)" />
+
+            {/* Geometric patterns — Islamic star motif (subtle) */}
+            <g opacity="0.06" transform="translate(370, 250)">
+              <polygon points="0,-20 6,-7 20,-7 9,3 12,18 0,10 -12,18 -9,3 -20,-7 -6,-7" fill="white" />
+            </g>
+            <g opacity="0.04" transform="translate(200, 270)">
+              <polygon points="0,-15 5,-5 15,-5 7,2 9,14 0,8 -9,14 -7,2 -15,-5 -5,-5" fill="white" />
+            </g>
+            <g opacity="0.04" transform="translate(580, 265)">
+              <polygon points="0,-15 5,-5 15,-5 7,2 9,14 0,8 -9,14 -7,2 -15,-5 -5,-5" fill="white" />
+            </g>
+          </svg>
         </div>
 
-        {/* Progress bar animated */}
-        <div className="relative">
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-white/40 text-xs">Limite mensuelle</span>
-            <span className="text-white/90 text-xs font-semibold">
-              $<AnimatedCounter value={MOCK_USER.monthlyUsed} /> / ${MOCK_USER.monthlyLimit.toLocaleString()} CAD
-            </span>
+        {/* Content overlay */}
+        <div className="relative z-10 p-5 sm:p-6">
+          <div className="flex items-start justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-white/15 border border-white/20 backdrop-blur-sm flex items-center justify-center animate-bounce-in">
+                <span className="text-lg font-bold text-white">{MOCK_USER.name[0]}</span>
+              </div>
+              <div>
+                <p className="text-white/50 text-[11px] font-medium uppercase tracking-widest">Bienvenue</p>
+                <h2 className="text-xl font-bold text-white">{MOCK_USER.name}</h2>
+              </div>
+            </div>
+            <Badge color="gold">
+              <svg className="w-3 h-3 mr-0.5" viewBox="0 0 24 24" fill="currentColor">
+                <path fillRule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.749.749 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+              </svg>
+              {MOCK_USER.kycLabel}
+            </Badge>
           </div>
-          <div className="h-2 bg-white/8 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-dz-gold to-dz-gold-light rounded-full transition-all duration-1000 ease-out progress-animated"
-              style={{ width: `${usedPercent}%` }}
-            />
+
+          {/* Progress bar */}
+          <div className="relative">
+            <div className="flex items-center justify-between text-sm mb-2">
+              <span className="text-white/40 text-xs">Limite mensuelle</span>
+              <span className="text-white/90 text-xs font-semibold">
+                $<AnimatedCounter value={MOCK_USER.monthlyUsed} /> / ${MOCK_USER.monthlyLimit.toLocaleString()} CAD
+              </span>
+            </div>
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+              <div
+                className="h-full bg-gradient-to-r from-dz-gold to-dz-gold-light rounded-full transition-all duration-1000 ease-out progress-animated"
+                style={{ width: `${usedPercent}%` }}
+              />
+            </div>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* 3. Quick Actions - Talabat category grid */}
       <div className="animate-stagger-in stagger-3">
@@ -326,13 +510,32 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 6. In-app ad space — Partner banner (Snoonu style) */}
+      {/* 6. In-app ad space — Illustrated savings banner */}
       <div className="animate-stagger-in stagger-6">
-        <div className="rounded-2xl bg-gradient-to-r from-amber-50 to-dz-cream border border-dz-gold/20 p-4 flex items-center gap-4 card-press">
-          <div className="w-14 h-14 rounded-2xl bg-dz-gold/10 flex items-center justify-center flex-shrink-0">
-            <svg className="w-7 h-7 text-dz-gold" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 0 1-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004ZM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 0 1-.921.42Z" />
-              <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v.816a3.836 3.836 0 0 0-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.113 2.178.502.4 1.102.647 1.719.756v2.978a2.536 2.536 0 0 1-.921-.421l-.879-.66a.75.75 0 0 0-.9 1.2l.879.66c.533.4 1.169.645 1.821.75V18a.75.75 0 0 0 1.5 0v-.81a4.124 4.124 0 0 0 1.821-.749c.745-.559 1.179-1.344 1.179-2.191 0-.847-.434-1.632-1.179-2.191a4.122 4.122 0 0 0-1.821-.75V8.354c.29.082.559.213.786.393l.415.33a.75.75 0 0 0 .933-1.175l-.415-.33a3.836 3.836 0 0 0-1.719-.755V6Z" clipRule="evenodd" />
+        <div className="rounded-2xl bg-gradient-to-r from-amber-50 via-white to-dz-cream border border-dz-gold/20 p-4 flex items-center gap-3 card-press overflow-hidden relative">
+          {/* SVG illustration — bank vs DinarZone comparison */}
+          <div className="w-16 h-16 flex-shrink-0 relative">
+            <svg className="w-full h-full" viewBox="0 0 64 64" fill="none">
+              {/* Bank building (crossed out) */}
+              <rect x="8" y="24" width="24" height="20" rx="2" fill="#E0DBD0" opacity="0.5" />
+              <path d="M8 24 L20 14 L32 24" fill="#E0DBD0" opacity="0.4" />
+              <rect x="13" y="30" width="4" height="6" rx="1" fill="#8B9AAF" opacity="0.3" />
+              <rect x="23" y="30" width="4" height="6" rx="1" fill="#8B9AAF" opacity="0.3" />
+              <rect x="13" y="38" width="4" height="6" rx="1" fill="#8B9AAF" opacity="0.3" />
+              <rect x="23" y="38" width="4" height="6" rx="1" fill="#8B9AAF" opacity="0.3" />
+              {/* X over bank */}
+              <line x1="8" y1="14" x2="32" y2="44" stroke="#D21034" strokeWidth="2.5" opacity="0.5" />
+              <line x1="32" y1="14" x2="8" y2="44" stroke="#D21034" strokeWidth="2.5" opacity="0.5" />
+              {/* Arrow pointing right */}
+              <path d="M36 32 L44 32" stroke="#B8923B" strokeWidth="2" strokeLinecap="round" />
+              <path d="M42 28 L46 32 L42 36" stroke="#B8923B" strokeWidth="2" strokeLinecap="round" fill="none" />
+              {/* DZ coin (golden) */}
+              <circle cx="52" cy="32" r="10" fill="#B8923B" opacity="0.2" />
+              <circle cx="52" cy="32" r="8" fill="#D4AF6A" opacity="0.3" />
+              <text x="52" y="36" textAnchor="middle" fontSize="9" fill="#B8923B" fontWeight="bold">DZ</text>
+              {/* Savings sparkle */}
+              <circle cx="58" cy="22" r="2" fill="#B8923B" opacity="0.4" />
+              <circle cx="46" cy="20" r="1.5" fill="#D4AF6A" opacity="0.3" />
             </svg>
           </div>
           <div className="flex-1">
