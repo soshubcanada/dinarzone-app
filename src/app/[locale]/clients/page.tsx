@@ -89,8 +89,8 @@ export default function ClientsLandingPage() {
           </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-bold text-[#7B8DB5]">
-            <a href="#comment-ca-marche" className="hover:text-white transition-colors">Comment ca marche</a>
-            <a href="#securite" className="hover:text-white transition-colors">Securite</a>
+            <a href="#comment-ca-marche" className="hover:text-white transition-colors">Comment ça marche</a>
+            <a href="#securite" className="hover:text-white transition-colors">Sécurité</a>
             <a href="#agents" className="hover:text-white transition-colors">Devenir Agent</a>
           </div>
 
@@ -102,7 +102,7 @@ export default function ClientsLandingPage() {
               href={`/${loc}/register`}
               className="px-6 py-2.5 bg-white text-[#070B14] rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
-              Creer un compte
+              Créer un compte
             </Link>
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function ClientsLandingPage() {
               <span className="w-2 h-2 rounded-full bg-[#00A84D] animate-pulse" />
               Nouveau corridor Canada
               <ArrowRightIcon className="w-3 h-3" />
-              Algerie
+              Algérie
             </div>
             <h1 className="text-5xl lg:text-7xl font-serif font-bold leading-[1.1] mb-6">
               L&apos;argent au pays,
@@ -136,8 +136,8 @@ export default function ClientsLandingPage() {
               </span>
             </h1>
             <p className="text-lg text-[#F0F4FA] mb-8 max-w-lg leading-relaxed">
-              Transferez vos fonds vers le Maghreb en quelques secondes. Taux de change premium,
-              livraison BaridiMob instantanee, zero frais caches.
+              Transférez vos fonds vers le Maghreb en quelques secondes. Taux de change premium,
+              livraison BaridiMob instantanée, zéro frais cachés.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -153,7 +153,7 @@ export default function ClientsLandingPage() {
                 type="button"
                 className="px-8 py-4 bg-[#0F1523]/80 backdrop-blur-sm border border-white/10 hover:bg-white/5 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2"
               >
-                Telecharger l&apos;App
+                Télécharger l&apos;App
                 <PhoneIcon className="w-5 h-5" />
               </button>
             </div>
@@ -218,7 +218,7 @@ export default function ClientsLandingPage() {
 
               {/* Receive output */}
               <div className="bg-[#070B14] border border-white/10 rounded-2xl p-4 mt-2">
-                <p className="text-xs font-bold text-[#7B8DB5] block mb-1">Le beneficiaire recoit</p>
+                <p className="text-xs font-bold text-[#7B8DB5] block mb-1">Le bénéficiaire reçoit</p>
                 <div className="flex items-center">
                   <div className="w-full text-3xl font-bold text-[#00A84D] tabular-nums truncate">
                     {receiveAmount}
@@ -245,7 +245,7 @@ export default function ClientsLandingPage() {
       <section id="securite" className="border-y border-white/5 bg-white/[0.02] py-8 relative z-20">
         <div className="max-w-7xl mx-auto px-6">
           <p className="text-center text-xs font-bold text-[#7B8DB5] uppercase tracking-widest mb-6">
-            Securise & Regule par
+            Sécurisé & Régulé par
           </p>
           <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-50 grayscale">
             <div className="text-xl font-serif font-bold">FINTRAC</div>
@@ -266,11 +266,11 @@ export default function ClientsLandingPage() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-serif font-bold mb-4">
-            La distance n&apos;est plus une barriere.
+            La distance n&apos;est plus une barrière.
           </h2>
           <p className="text-[#7B8DB5] max-w-2xl mx-auto">
-            Nous avons reconstruit l&apos;infrastructure financiere de zero pour vous offrir
-            la meilleure experience du marche.
+            Nous avons reconstruit l&apos;infrastructure financière de zéro pour vous offrir
+            la meilleure expérience du marché.
           </p>
         </motion.div>
 
@@ -278,18 +278,18 @@ export default function ClientsLandingPage() {
           {[
             {
               icon: <BoltIcon className="w-7 h-7" />,
-              title: "Livraison Instantanee",
+              title: "Livraison Instantanée",
               desc: "Vos DZD sont disponibles sur le compte BaridiMob de votre proche en quelques secondes, 24/7.",
             },
             {
               icon: <ShieldIcon className="w-7 h-7" />,
-              title: "Securite Bancaire",
-              desc: "Vos fonds sont proteges par chiffrement AES-256 et securises par authentification biometrique.",
+              title: "Sécurité Bancaire",
+              desc: "Vos fonds sont protégés par chiffrement AES-256 et sécurisés par authentification biométrique.",
             },
             {
               icon: <CoinIcon className="w-7 h-7" />,
               title: "Taux Imbattables",
-              desc: "Nous contournons les banques traditionnelles pour vous offrir un taux de change au plus proche du marche reel.",
+              desc: "Nous contournons les banques traditionnelles pour vous offrir un taux de change au plus proche du marché réel.",
             },
           ].map((feat, idx) => (
             <motion.div
@@ -320,7 +320,7 @@ export default function ClientsLandingPage() {
             <span className="font-serif font-bold tracking-widest">DinarZone</span>
           </div>
           <p className="text-[#7B8DB5] text-xs">
-            &copy; {new Date().getFullYear()} DinarZone Inc. Operant sous licence FINTRAC au Canada.
+            &copy; {new Date().getFullYear()} DinarZone Inc. Opérant sous licence FINTRAC au Canada.
           </p>
         </div>
       </footer>
