@@ -6,12 +6,23 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import FlagIcon from "@/components/ui/FlagIcon";
 
-// ---------- Constants ----------
-const EXCHANGE_RATE = 99.5;
-const TRANSFER_FEE = 2.5;
+// ---------- Business rules ----------
+// Algeria has two FX markets: official (Bank of Algeria) and parallel ("Le Square").
+// DinarZone's edge is delivering the parallel market rate via a local POS agent network,
+// while the official rate is served via traditional bank wire.
+const OFFICIAL_MARKET_RATE = 100.5;   // Banque Centrale d'Algerie
+const PARALLEL_MARKET_RATE = 210.0;   // Marche parallele "Le Square"
+const DINARZONE_MARGIN = 0.015;       // 1.5% margin kept on parallel rate
+const FIXED_FEE = 2.5;                // CAD fixed processing fee
+
+// Final rates displayed to customers
+const FINAL_OFFICIAL_RATE = OFFICIAL_MARKET_RATE;
+const FINAL_PREMIUM_RATE = PARALLEL_MARKET_RATE * (1 - DINARZONE_MARGIN); // ≈ 206.85
 
 // Hero background image (served locally to avoid CSP/ORB issues)
 const HERO_IMAGE_URL = "/clients/hero-bg.jpg";
+
+type RateChoice = "premium" | "official";
 
 // ---------- SVG Icons ----------
 function BoltIcon({ className = "w-6 h-6" }: { className?: string }) {
@@ -49,17 +60,10 @@ function PhoneIcon({ className = "w-5 h-5" }: { className?: string }) {
     </svg>
   );
 }
-function MinusIcon({ className = "w-3 h-3" }: { className?: string }) {
+function FlameIcon({ className = "w-3 h-3" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
-    </svg>
-  );
-}
-function CrossIcon({ className = "w-3 h-3" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M13.5 0s1.13 3.29.88 5.78c-.27 2.67-2.13 4.93-4.13 6.84C8.22 14.56 6 16.5 6 19.5 6 22.53 8.47 25 11.5 25s5.5-2.47 5.5-5.5c0-1.78-.87-3.34-2.19-4.48C13.12 14.11 12 12 12 12s-2.19 2.56-3.25 4.5C8.05 17.35 7.5 18.32 7.5 19.5c0-1.5 1-3 2.5-4.5.58-.58 1.5-1 1.5-2 0-.67-.5-1.5-.5-2.5C11 8 13.5 6 13.5 0z" />
     </svg>
   );
 }
@@ -70,11 +74,31 @@ export default function ClientsLandingPage() {
   const loc = (locale as string) || "fr";
 
   const [sendAmount, setSendAmount] = useState<string>("1000");
+  const [selectedRate, setSelectedRate] = useState<RateChoice>("premium");
 
-  const receiveAmount = useMemo(() => {
-    const n = parseFloat(sendAmount) || 0;
-    return (n * EXCHANGE_RATE).toLocaleString("fr-DZ", { minimumFractionDigits: 2 });
-  }, [sendAmount]);
+  const amountToConvert = useMemo(() => parseFloat(sendAmount) || 0, [sendAmount]);
+
+  const receiveOfficial = useMemo(
+    () =>
+      (amountToConvert * FINAL_OFFICIAL_RATE).toLocaleString("fr-DZ", {
+        maximumFractionDigits: 0,
+      }),
+    [amountToConvert]
+  );
+
+  const receivePremium = useMemo(
+    () =>
+      (amountToConvert * FINAL_PREMIUM_RATE).toLocaleString("fr-DZ", {
+        maximumFractionDigits: 0,
+      }),
+    [amountToConvert]
+  );
+
+  // Savings vs official (shown as highlight on premium card)
+  const savingsMultiplier = useMemo(
+    () => (FINAL_PREMIUM_RATE / FINAL_OFFICIAL_RATE).toFixed(2),
+    []
+  );
 
   return (
     <div className="min-h-screen bg-[#070B14] font-sans text-white selection:bg-[#00A84D]/30 overflow-x-hidden">
@@ -159,22 +183,26 @@ export default function ClientsLandingPage() {
             </div>
           </motion.div>
 
-          {/* Right: Calculator widget */}
+          {/* Right: Dual-rate calculator widget */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="relative w-full max-w-md mx-auto lg:ml-auto"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#00A84D]/20 to-transparent rounded-3xl blur-2xl" />
+            {/* Outer gold halo (hints at premium parallel rate) */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#B8923B]/25 via-[#00A84D]/10 to-transparent rounded-3xl blur-2xl" />
 
-            <div className="relative bg-[#0F1523]/90 backdrop-blur-2xl border border-white/10 p-6 rounded-3xl shadow-2xl">
-              <h3 className="text-sm font-bold text-white mb-6 uppercase tracking-wider">
-                Calculez votre transfert
+            <div className="relative bg-[#0F1523]/90 backdrop-blur-2xl border border-[#B8923B]/30 p-6 rounded-3xl shadow-[0_0_40px_rgba(184,146,59,0.15)] overflow-hidden">
+              {/* Ambient gold glow in corner */}
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#B8923B] rounded-full blur-[80px] opacity-20 pointer-events-none" />
+
+              <h3 className="text-sm font-bold text-white mb-6 uppercase tracking-wider relative">
+                Comparez &amp; Choisissez
               </h3>
 
               {/* Send input */}
-              <div className="bg-[#070B14] border border-white/10 rounded-2xl p-4 mb-2 focus-within:border-[#00A84D] transition-colors">
+              <div className="bg-[#070B14] border border-white/10 rounded-2xl p-4 mb-6 focus-within:border-[#B8923B] transition-colors relative">
                 <label htmlFor="send-amount" className="text-xs font-bold text-[#7B8DB5] block mb-1">
                   Vous envoyez
                 </label>
@@ -185,56 +213,163 @@ export default function ClientsLandingPage() {
                     inputMode="decimal"
                     value={sendAmount}
                     onChange={(e) => setSendAmount(e.target.value)}
+                    placeholder="0.00"
                     className="w-full bg-transparent text-3xl font-bold text-white outline-none tabular-nums"
                   />
-                  <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">
+                  <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 shrink-0">
                     <FlagIcon countryCode="CA" size="sm" />
                     <span className="font-bold text-sm">CAD</span>
                   </div>
                 </div>
               </div>
 
-              {/* Connector with fee + rate */}
-              <div className="pl-6 py-4 relative">
-                <div className="absolute left-[22px] top-0 bottom-0 w-px bg-white/10" />
-                <div className="flex items-center justify-between text-sm mb-3 relative">
-                  <div className="absolute -left-5 w-4 h-4 bg-[#0F1523] border border-white/10 rounded-full flex items-center justify-center text-white/70">
-                    <MinusIcon className="w-2 h-2" />
+              {/* Strategic choice: two offers */}
+              <div className="space-y-4 mb-6 relative">
+                {/* OFFER 1: Premium rate (Local/Parallel market) — highlighted */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedRate("premium")}
+                  aria-pressed={selectedRate === "premium"}
+                  className={`relative w-full text-left cursor-pointer rounded-2xl p-1 transition-all ${
+                    selectedRate === "premium"
+                      ? "bg-gradient-to-r from-[#B8923B] to-[#9A7A31] shadow-lg scale-[1.02]"
+                      : "bg-white/5 hover:bg-white/10"
+                  }`}
+                >
+                  {/* "Best choice" badge */}
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#00A84D] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-md whitespace-nowrap z-10 flex items-center gap-1">
+                    <FlameIcon className="w-3 h-3" />
+                    Taux Marché Local
                   </div>
-                  <span className="text-[#7B8DB5]">Frais fixes</span>
-                  <span className="font-bold text-white tabular-nums">{TRANSFER_FEE.toFixed(2)} CAD</span>
-                </div>
-                <div className="flex items-center justify-between text-sm relative">
-                  <div className="absolute -left-5 w-4 h-4 bg-[#0F1523] border border-[#00A84D] rounded-full flex items-center justify-center text-[#00A84D]">
-                    <CrossIcon className="w-2 h-2" />
+
+                  <div
+                    className={`rounded-xl p-4 flex flex-col ${
+                      selectedRate === "premium" ? "bg-[#070B14]" : "bg-transparent"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <span
+                        className={`text-sm font-bold ${
+                          selectedRate === "premium" ? "text-[#B8923B]" : "text-white"
+                        }`}
+                      >
+                        Réseau Premium DinarZone
+                      </span>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          selectedRate === "premium" ? "border-[#B8923B]" : "border-white/30"
+                        }`}
+                      >
+                        {selectedRate === "premium" && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#B8923B]" />
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-[#7B8DB5] mb-3">
+                      Retrait en espèces via agents agréés.
+                    </p>
+
+                    <div className="flex justify-between items-end gap-2">
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-[#7B8DB5] uppercase">Taux appliqué</p>
+                        <p className="font-mono text-sm text-white truncate">
+                          1 CAD = {FINAL_PREMIUM_RATE.toFixed(2)} DZD
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-[10px] text-[#00A84D] font-bold uppercase mb-0.5">
+                          Le bénéficiaire reçoit
+                        </p>
+                        <p className="text-2xl font-bold text-[#00A84D] tabular-nums">
+                          {receivePremium}
+                          <span className="text-xs text-[#00A84D]/80 ml-1">DZD</span>
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-[#00A84D] font-bold flex items-center gap-1">
-                    Taux garanti (15 min)
-                    <span className="w-2 h-2 rounded-full bg-[#00A84D] animate-pulse" />
+                </button>
+
+                {/* OFFER 2: Official rate (Bank wire) */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedRate("official")}
+                  aria-pressed={selectedRate === "official"}
+                  className={`relative w-full text-left cursor-pointer rounded-2xl border transition-all ${
+                    selectedRate === "official"
+                      ? "border-white bg-white/5 scale-[1.02]"
+                      : "border-white/10 bg-transparent hover:bg-white/5"
+                  }`}
+                >
+                  <div className="p-4 flex flex-col opacity-90">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-bold text-white">
+                        Virement Bancaire Officiel
+                      </span>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          selectedRate === "official" ? "border-white" : "border-white/30"
+                        }`}
+                      >
+                        {selectedRate === "official" && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-[#7B8DB5] mb-3">
+                      Taux de la Banque Centrale d&apos;Algérie.
+                    </p>
+
+                    <div className="flex justify-between items-end gap-2">
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-[#7B8DB5] uppercase">Taux appliqué</p>
+                        <p className="font-mono text-sm text-[#7B8DB5] truncate">
+                          1 CAD = {FINAL_OFFICIAL_RATE.toFixed(2)} DZD
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xl font-bold text-white tabular-nums">
+                          {receiveOfficial}
+                          <span className="text-xs text-white/70 ml-1">DZD</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              {/* Shared fixed fees summary */}
+              <div className="flex justify-between items-center text-xs text-[#7B8DB5] px-2 mb-4 relative">
+                <span>Frais de traitement DinarZone</span>
+                <span className="font-bold text-white tabular-nums">
+                  {FIXED_FEE.toFixed(2)} CAD
+                </span>
+              </div>
+
+              {/* Savings callout (only when premium is selected) */}
+              {selectedRate === "premium" && (
+                <div className="flex justify-between items-center text-xs px-2 mb-4 relative">
+                  <span className="text-[#00A84D] font-bold uppercase tracking-wider">
+                    Gain vs. officiel
                   </span>
-                  <span className="font-bold text-white tabular-nums">{EXCHANGE_RATE.toFixed(2)} DZD</span>
+                  <span className="font-bold text-[#00A84D] tabular-nums">
+                    ×{savingsMultiplier}
+                  </span>
                 </div>
-              </div>
+              )}
 
-              {/* Receive output */}
-              <div className="bg-[#070B14] border border-white/10 rounded-2xl p-4 mt-2">
-                <p className="text-xs font-bold text-[#7B8DB5] block mb-1">Le bénéficiaire reçoit</p>
-                <div className="flex items-center">
-                  <div className="w-full text-3xl font-bold text-[#00A84D] tabular-nums truncate">
-                    {receiveAmount}
-                  </div>
-                  <div className="flex items-center gap-2 bg-[#B8923B]/10 px-3 py-1.5 rounded-lg border border-[#B8923B]/30 ml-2 shrink-0">
-                    <FlagIcon countryCode="DZ" size="sm" />
-                    <span className="font-bold text-sm text-[#B8923B]">DZD</span>
-                  </div>
-                </div>
-              </div>
-
+              {/* Dynamic CTA */}
               <Link
                 href={`/${loc}/register`}
-                className="w-full mt-6 py-4 bg-white text-[#070B14] rounded-xl font-bold text-lg hover:bg-gray-200 transition-colors flex items-center justify-center"
+                className={`relative w-full mt-2 py-4 rounded-xl font-bold text-lg transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2 ${
+                  selectedRate === "premium"
+                    ? "bg-gradient-to-r from-[#B8923B] to-[#9A7A31] text-[#070B14] hover:shadow-[0_0_20px_rgba(184,146,59,0.4)]"
+                    : "bg-white text-[#070B14] hover:bg-gray-200"
+                }`}
               >
-                Envoyer de l&apos;argent
+                Continuer avec {selectedRate === "premium" ? "le Taux Local" : "le Taux Officiel"}
+                <ArrowRightIcon className="w-5 h-5" />
               </Link>
             </div>
           </motion.div>
