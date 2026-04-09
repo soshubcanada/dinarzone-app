@@ -10,9 +10,8 @@ import FlagIcon from "@/components/ui/FlagIcon";
 const EXCHANGE_RATE = 99.5;
 const TRANSFER_FEE = 2.5;
 
-// Hero background image (placeholder — replace with final exclusive DinarZone asset)
-const HERO_IMAGE_URL =
-  "https://images.unsplash.com/photo-1613271701323-9993309a4a75?q=80&w=2000&auto=format&fit=crop";
+// Hero background image (served locally to avoid CSP/ORB issues)
+const HERO_IMAGE_URL = "/clients/hero-bg.jpg";
 
 // ---------- SVG Icons ----------
 function BoltIcon({ className = "w-6 h-6" }: { className?: string }) {
