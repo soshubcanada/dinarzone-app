@@ -1,7 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Tajawal } from "next/font/google";
+import { Inter, Playfair_Display, Tajawal } from "next/font/google";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import "./globals.css";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+});
 
 const tajawal = Tajawal({
   variable: "--font-tajawal",
@@ -51,9 +62,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${tajawal.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-[family-name:var(--font-tajawal)]">
-        <ToastProvider>{children}</ToastProvider>
+    <html lang="fr" suppressHydrationWarning className={`${inter.variable} ${playfair.variable} ${tajawal.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col font-sans text-dz-fg bg-dz-bg">
+        <ThemeProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -32,7 +32,7 @@ export default function StepPayment() {
     setTimeout(() => {
       setLoading(false);
       wizard.setTransferResult(
-        "tr_" + Math.random().toString(36).substring(2, 10),
+        "tr_" + crypto.randomUUID().replace(/-/g, "").substring(0, 10),
         "DZ-A8F3K2M9"
       );
     }, 2500);

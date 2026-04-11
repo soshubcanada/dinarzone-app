@@ -1,38 +1,84 @@
 import { NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import type { DbCurrencyCorridor } from "@/lib/types/database";
 
-// Exchange rates with cache (refresh every 5 minutes)
-let ratesCache: { data: Rate[]; timestamp: number } | null = null;
+// In-memory cache (per server instance)
+let ratesCache: { data: CorridorQuote[]; timestamp: number } | null = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
 
-interface Rate {
+interface CorridorQuote {
+  corridor_code: string;
   from: string;
   to: string;
-  rate: number;
+  mid_market_rate: number;
+  dz_rate: number;
+  margin_percent: number;
+  fee_flat: number;
   fee_percent: number;
   min_amount: number;
   max_amount: number;
 }
 
-// Base rates — will be replaced by live API (Thunes, Open Exchange Rates)
-const BASE_RATES: Rate[] = [
-  { from: "CAD", to: "DZD", rate: 99.5, fee_percent: 1.5, min_amount: 10, max_amount: 10000 },
-  { from: "CAD", to: "TND", rate: 2.28, fee_percent: 1.5, min_amount: 10, max_amount: 10000 },
-  { from: "QAR", to: "DZD", rate: 37.2, fee_percent: 2.0, min_amount: 50, max_amount: 20000 },
-  { from: "QAR", to: "TND", rate: 0.85, fee_percent: 2.0, min_amount: 50, max_amount: 20000 },
-  { from: "AED", to: "DZD", rate: 36.8, fee_percent: 2.0, min_amount: 50, max_amount: 20000 },
-  { from: "AED", to: "TND", rate: 0.84, fee_percent: 2.0, min_amount: 50, max_amount: 20000 },
-  { from: "CAD", to: "QAR", rate: 2.71, fee_percent: 1.0, min_amount: 10, max_amount: 10000 },
-  { from: "CAD", to: "AED", rate: 2.73, fee_percent: 1.0, min_amount: 10, max_amount: 10000 },
-  { from: "QAR", to: "AED", rate: 1.01, fee_percent: 0.5, min_amount: 100, max_amount: 50000 },
-  { from: "DZD", to: "TND", rate: 0.023, fee_percent: 2.5, min_amount: 5000, max_amount: 500000 },
-];
+/**
+ * Fetch corridors from Supabase. Falls back to hardcoded rates
+ * if the database is unreachable (e.g. no env vars configured).
+ */
+async function fetchCorridorRates(): Promise<CorridorQuote[]> {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
+      .from("currency_corridors")
+      .select("*")
+      .eq("is_active", true)
+      .order("corridor_code");
 
-async function fetchLiveRates(): Promise<Rate[]> {
-  // TODO: Replace with live API calls (Thunes / Open Exchange Rates)
-  // For now, add small random variation to simulate live rates
-  return BASE_RATES.map((r) => ({
-    ...r,
-    rate: +(r.rate * (1 + (Math.random() - 0.5) * 0.005)).toFixed(4),
+    if (error || !data || data.length === 0) {
+      return buildFallbackRates();
+    }
+
+    return (data as DbCurrencyCorridor[]).map((c) => ({
+      corridor_code: c.corridor_code.trim(),
+      from: c.source_currency.trim(),
+      to: c.target_currency.trim(),
+      mid_market_rate: Number(c.mid_market_rate),
+      dz_rate: +(Number(c.mid_market_rate) * (1 - Number(c.dz_margin_percent))).toFixed(4),
+      margin_percent: Number(c.dz_margin_percent) * 100,
+      fee_flat: Number(c.fee_flat),
+      fee_percent: Number(c.fee_percent) * 100,
+      min_amount: Number(c.min_amount),
+      max_amount: Number(c.max_amount),
+    }));
+  } catch {
+    return buildFallbackRates();
+  }
+}
+
+/** Hardcoded fallback matching the rate engine constants */
+function buildFallbackRates(): CorridorQuote[] {
+  const corridors = [
+    { code: "CA-DZ", from: "CAD", to: "DZD", mid: 100.3, margin: 0.8 },
+    { code: "CA-TN", from: "CAD", to: "TND", mid: 2.30, margin: 0.9 },
+    { code: "CA-QA", from: "CAD", to: "QAR", mid: 2.74, margin: 0.7 },
+    { code: "CA-AE", from: "CAD", to: "AED", mid: 2.76, margin: 0.7 },
+    { code: "QA-DZ", from: "QAR", to: "DZD", mid: 37.6, margin: 1.2 },
+    { code: "QA-TN", from: "QAR", to: "TND", mid: 0.86, margin: 1.2 },
+    { code: "QA-AE", from: "QAR", to: "AED", mid: 1.01, margin: 0.5 },
+    { code: "AE-DZ", from: "AED", to: "DZD", mid: 37.2, margin: 1.1 },
+    { code: "AE-TN", from: "AED", to: "TND", mid: 0.85, margin: 1.1 },
+    { code: "DZ-TN", from: "DZD", to: "TND", mid: 0.0233, margin: 1.5 },
+  ];
+
+  return corridors.map((c) => ({
+    corridor_code: c.code,
+    from: c.from,
+    to: c.to,
+    mid_market_rate: c.mid,
+    dz_rate: +(c.mid * (1 - c.margin / 100)).toFixed(4),
+    margin_percent: c.margin,
+    fee_flat: 0,
+    fee_percent: 0,
+    min_amount: 10,
+    max_amount: 10000,
   }));
 }
 
@@ -41,12 +87,15 @@ export async function GET() {
     const now = Date.now();
 
     if (!ratesCache || now - ratesCache.timestamp > CACHE_TTL) {
-      const rates = await fetchLiveRates();
+      const rates = await fetchCorridorRates();
       ratesCache = { data: rates, timestamp: now };
     }
 
+    // Strip internal margin data from public response
+    const publicCorridors = ratesCache.data.map(({ margin_percent, ...rest }) => rest);
+
     return NextResponse.json({
-      rates: ratesCache.data,
+      corridors: publicCorridors,
       updated_at: new Date(ratesCache.timestamp).toISOString(),
       cache_ttl_seconds: Math.round(CACHE_TTL / 1000),
     });

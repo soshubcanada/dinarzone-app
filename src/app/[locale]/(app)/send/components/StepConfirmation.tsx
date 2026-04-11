@@ -24,15 +24,20 @@ export default function StepConfirmation() {
     wizard.reset();
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(trackingCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(trackingCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for browsers that don't support clipboard API
+      setCopied(false);
+    }
   };
 
   const handleShareWhatsApp = () => {
     const text = encodeURIComponent(
-      `J'ai envoye ${wizard.receiveAmount.toLocaleString()} ${wizard.receiveCurrency} via DinarZone! Code de suivi: ${trackingCode}`
+      `J'ai envoye ${wizard.receiveAmount.toLocaleString("fr-CA")} ${wizard.receiveCurrency} via DinarZone! Code de suivi: ${trackingCode}`
     );
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
@@ -105,13 +110,13 @@ export default function StepConfirmation() {
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm text-dz-text-muted">Montant envoye</span>
             <span className="text-sm font-semibold text-dz-text">
-              ${wizard.sendAmount.toLocaleString()} {wizard.sendCurrency}
+              ${wizard.sendAmount.toLocaleString("fr-CA")} {wizard.sendCurrency}
             </span>
           </div>
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm text-dz-text-muted">Montant recu</span>
             <span className="text-sm font-bold text-dz-green">
-              {wizard.receiveAmount.toLocaleString()} {wizard.receiveCurrency}
+              {wizard.receiveAmount.toLocaleString("fr-CA")} {wizard.receiveCurrency}
             </span>
           </div>
           <div className="flex items-center justify-between px-4 py-3">

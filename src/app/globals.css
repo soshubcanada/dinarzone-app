@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme inline {
-  /* DinarZone Color System */
+  /* DinarZone Color System — Static */
   --color-dz-green: #006633;
   --color-dz-green-dark: #004D26;
   --color-dz-green-darkest: #003318;
@@ -22,15 +24,44 @@
   --color-dz-maroon: #8A184A;
   --color-dz-success: #10B981;
   --color-dz-warning: #F59E0B;
+  --color-dz-primary: #00A84D;
+
+  /* Theme-aware colors (CSS variable based) */
+  --color-dz-bg: var(--bg-main);
+  --color-dz-card: var(--bg-card);
+  --color-dz-fg: var(--text-main);
+  --color-dz-fg-muted: var(--text-muted);
+  --color-dz-border-subtle: var(--border-subtle);
+  --color-dz-glass: var(--glass-bg);
 
   /* Typography */
-  --font-sans: 'Tajawal', sans-serif;
-  --font-heading: 'Cormorant Garamond', serif;
+  --font-sans: var(--font-inter), 'Tajawal', sans-serif;
+  --font-serif: var(--font-playfair), serif;
+  --font-heading: var(--font-playfair), serif;
 }
 
+/* Light mode (default) */
 :root {
+  --bg-main: #F5F3EC;
+  --bg-card: #FFFFFF;
+  --text-main: #070B14;
+  --text-muted: #5A6B8A;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.7);
   --background: #F5F3EC;
   --foreground: #1A1F2E;
+}
+
+/* Dark mode */
+.dark {
+  --bg-main: #070B14;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --text-main: #F0F4FA;
+  --text-muted: #7B8DB5;
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(7, 11, 20, 0.7);
+  --background: #070B14;
+  --foreground: #F0F4FA;
 }
 
 * {
@@ -39,10 +70,11 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg-main);
+  color: var(--text-main);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* RTL Support */
@@ -210,6 +242,27 @@ body {
   display: none;
 }
 
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Premium mesh gradient background */
+.bg-mesh-premium {
+  background-color: #070B14;
+  background-image:
+    radial-gradient(at 0% 0%, hsla(145, 100%, 25%, 0.4) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(43, 53%, 48%, 0.2) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(145, 100%, 15%, 0.4) 0px, transparent 50%);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
 /* Revolut-style dark gradient header */
 .header-gradient {
   background: linear-gradient(180deg, #070B14 0%, #0F1422 100%);
@@ -229,6 +282,12 @@ input:focus, select:focus, textarea:focus {
 /* Safe area padding for mobile */
 .safe-bottom {
   padding-bottom: max(env(safe-area-inset-bottom), 16px);
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
+  }
 }
 
 /* Frosted glass - premium version */

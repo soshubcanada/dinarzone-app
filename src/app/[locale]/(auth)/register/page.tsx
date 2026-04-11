@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { createClient } from "@/lib/supabase/client";
 
 type AccountType = "personal" | "business";
 
@@ -31,6 +32,8 @@ const BUSINESS_TYPES = [
 export default function RegisterPage() {
   const { locale } = useParams<{ locale: string }>();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [accountType, setAccountType] = useState<AccountType>("personal");
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -76,11 +79,64 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!acceptTerms) return;
+    setError(null);
     setLoading(true);
-    setTimeout(() => {
+
+    const supabase = createClient();
+    const dial = COUNTRIES.find((c) => c.code === form.phoneCountry)?.dial || "";
+    const fullPhone = form.phone ? `${dial}${form.phone.replace(/\D/g, "")}` : "";
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: form.email.trim(),
+      password: form.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/${locale}/dashboard`,
+        data: {
+          full_name: form.fullName.trim(),
+          phone: fullPhone,
+          country: form.country,
+          account_type: accountType,
+          preferred_locale: locale,
+          ...(accountType === "business" && {
+            business_name: form.businessName.trim(),
+            business_type: form.businessType,
+            business_registration: form.businessRegistration.trim(),
+          }),
+          ...(form.referralCode && { referral_code_used: form.referralCode.trim().toUpperCase() }),
+        },
+      },
+    });
+
+    if (signUpError) {
       setLoading(false);
+      const msg = signUpError.message.toLowerCase();
+      const code = (signUpError as { code?: string }).code || "";
+      if (msg.includes("already registered") || msg.includes("user already")) {
+        setError("Un compte existe déjà avec cet email. Essayez de vous connecter.");
+      } else if (code === "over_email_send_rate_limit" || msg.includes("rate limit")) {
+        setError("Trop d'inscriptions récentes. Patientez quelques minutes et réessayez.");
+      } else if (code === "email_address_invalid" || msg.includes("email address") && msg.includes("invalid")) {
+        setError("Adresse e-mail invalide. Utilisez un domaine standard (gmail.com, outlook.com, etc.).");
+      } else if (msg.includes("password")) {
+        setError("Mot de passe invalide. Minimum 9 caractères avec lettre, chiffre et caractère spécial.");
+      } else if (msg.includes("email")) {
+        setError("Problème avec l'adresse e-mail. Vérifiez le format et réessayez.");
+      } else {
+        setError("Impossible de créer le compte. Réessayez dans quelques minutes.");
+      }
+      return;
+    }
+
+    // Supabase signUp returns user + session. If email confirmation is required,
+    // session will be null and user needs to click the confirmation link.
+    setLoading(false);
+    if (data.session) {
+      // Auto-signed in (email confirmation disabled in project settings)
       window.location.href = `/${locale}/dashboard`;
-    }, 1500);
+    } else {
+      // Email confirmation required
+      setSuccess(true);
+    }
   };
 
   return (
@@ -161,6 +217,27 @@ export default function RegisterPage() {
           <span className="bg-white px-4 text-dz-text-muted">Ou avec votre email</span>
         </div>
       </div>
+
+      {error && (
+        <div
+          role="alert"
+          className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+        >
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div
+          role="status"
+          className="mb-5 rounded-xl border border-dz-green/30 bg-dz-green/5 px-4 py-4 text-sm text-dz-green-dark"
+        >
+          <p className="font-semibold mb-1">Compte créé. Vérifiez votre e-mail.</p>
+          <p className="text-dz-text-secondary">
+            Nous venons d&apos;envoyer un lien de confirmation à <strong>{form.email}</strong>. Cliquez dessus pour activer votre compte.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Full name */}

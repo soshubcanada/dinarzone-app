@@ -46,7 +46,8 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.href = "/fr/login";
+    const locale = window.location.pathname.split("/")[1] || "fr";
+    window.location.href = `/${locale}/login`;
   }, []);
 
   return { ...state, signOut };

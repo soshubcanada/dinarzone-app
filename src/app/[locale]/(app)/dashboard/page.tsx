@@ -1,34 +1,45 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import FlagIcon from "@/components/ui/FlagIcon";
+import HeroWelcomeCard from "@/components/dashboard/HeroWelcomeCard";
+import PromoCarousel from "@/components/dashboard/PromoCarousel";
+import RepeatTransferCard from "@/components/dashboard/RepeatTransferCard";
+import { getAllRatesWithTrends } from "@/lib/engine/rates";
+import { useKycStore } from "@/store/useKycStore";
 
-/* ---- Mock Data ---- */
-const MOCK_USER = {
-  name: "Karim",
-  kycTier: "tier_2" as const,
-  kycLabel: "Verifie",
-  monthlyLimit: 2000,
-  monthlyUsed: 650,
+/* ---- Rate data from engine ---- */
+const RATE_TRENDS = getAllRatesWithTrends();
+
+// Map rate trends to dashboard format (pick the 5 main corridors)
+const DISPLAY_CORRIDORS = ["CA-DZ", "CA-TN", "QA-DZ", "QA-TN", "AE-DZ"];
+const COUNTRY_TO_FLAG: Record<string, string> = {
+  CAD: "CA", DZD: "DZ", TND: "TN", QAR: "QA", AED: "AE",
 };
 
-const MOCK_RATES = [
-  { from: "CAD", fromFlag: "CA", to: "DZD", toFlag: "DZ", rate: 99.5, trend: "up" as const, delta: "+0.3" },
-  { from: "CAD", fromFlag: "CA", to: "TND", toFlag: "TN", rate: 2.28, trend: "up" as const, delta: "+0.02" },
-  { from: "QAR", fromFlag: "QA", to: "DZD", toFlag: "DZ", rate: 37.2, trend: "down" as const, delta: "-0.1" },
-  { from: "QAR", fromFlag: "QA", to: "TND", toFlag: "TN", rate: 0.85, trend: "up" as const, delta: "+0.01" },
-  { from: "AED", fromFlag: "AE", to: "DZD", toFlag: "DZ", rate: 36.8, trend: "up" as const, delta: "+0.2" },
-];
+const LIVE_RATES = RATE_TRENDS
+  .filter((r) => DISPLAY_CORRIDORS.includes(r.corridorId))
+  .map((r) => ({
+    from: r.from,
+    fromFlag: COUNTRY_TO_FLAG[r.from] || "CA",
+    to: r.to,
+    toFlag: COUNTRY_TO_FLAG[r.to] || "DZ",
+    rate: r.rate,
+    trend: r.direction as "up" | "down",
+    delta: r.delta,
+  }));
 
 const MOCK_TRANSFERS = [
-  { id: "1", recipientName: "Fatima Benali", country: "DZ", amount: "49,750 DZD", amountSent: "$500 CAD", status: "delivered" as const, date: "3 avr.", method: "BaridiMob" },
-  { id: "2", recipientName: "Mohamed Trabelsi", country: "TN", amount: "1,140 TND", amountSent: "$500 CAD", status: "processing" as const, date: "5 avr.", method: "D17" },
-  { id: "3", recipientName: "Ahmed Khelifi", country: "DZ", amount: "14,925 DZD", amountSent: "$150 CAD", status: "delivered" as const, date: "28 mars", method: "Cash" },
+  { id: "1", recipientName: "Fatima Benali", country: "DZ", amount: "49,750 DZD", amountSent: "$500 CAD", status: "delivered" as const, date: "Aujourd'hui, 14:30", method: "BaridiMob", isDebit: true },
+  { id: "2", recipientName: "Recharge Carte", country: "CA", amount: "1,500 CAD", amountSent: "", status: "delivered" as const, date: "Hier, 09:15", method: "Depot", isDebit: false },
+  { id: "3", recipientName: "Mohamed Trabelsi", country: "TN", amount: "1,140 TND", amountSent: "$500 CAD", status: "processing" as const, date: "7 avr.", method: "D17", isDebit: true },
+  { id: "4", recipientName: "Ahmed Khelifi", country: "DZ", amount: "14,925 DZD", amountSent: "$150 CAD", status: "delivered" as const, date: "28 mars", method: "Cash", isDebit: true },
 ];
 
 const STATUS_MAP: Record<string, { label: string; color: "green" | "gold" | "red" | "gray" }> = {
@@ -38,102 +49,7 @@ const STATUS_MAP: Record<string, { label: string; color: "green" | "gold" | "red
   cancelled: { label: "Annule", color: "red" },
 };
 
-/* ---- Promo banners (Talabat/Snoonu style) with original SVG illustrations ---- */
-const PROMO_BANNERS = [
-  {
-    id: "ramadan",
-    gradient: "promo-gradient-1",
-    tag: "RAMADAN 2026",
-    title: "0% de frais",
-    subtitle: "Sur votre premier transfert vers l'Algerie",
-    cta: "Envoyer maintenant",
-    href: "/send?to=DZ",
-    illustration: (
-      <svg className="w-28 h-28" viewBox="0 0 120 120" fill="none">
-        {/* Crescent moon */}
-        <circle cx="60" cy="45" r="28" fill="white" opacity="0.15" />
-        <circle cx="70" cy="38" r="24" fill="#006633" />
-        {/* Star */}
-        <polygon points="55,30 57,36 63,36 58,40 60,46 55,42 50,46 52,40 47,36 53,36" fill="white" opacity="0.2" />
-        {/* Gift/money envelope */}
-        <rect x="35" y="65" width="50" height="35" rx="6" fill="white" opacity="0.15" />
-        <path d="M35 73 L60 88 L85 73" stroke="white" strokeWidth="2" opacity="0.2" fill="none" />
-        {/* Dollar sign in envelope */}
-        <text x="60" y="85" textAnchor="middle" fontSize="16" fill="white" fontWeight="bold" opacity="0.2">$0</text>
-        {/* Sparkles */}
-        <circle cx="90" cy="30" r="2" fill="white" opacity="0.3" />
-        <circle cx="30" cy="50" r="1.5" fill="white" opacity="0.2" />
-        <circle cx="95" cy="60" r="1" fill="white" opacity="0.25" />
-      </svg>
-    ),
-  },
-  {
-    id: "referral",
-    gradient: "promo-gradient-2",
-    tag: "PARRAINAGE",
-    title: "Gagnez $10",
-    subtitle: "Pour chaque ami qui envoie son premier transfert",
-    cta: "Inviter un ami",
-    href: "/profile",
-    illustration: (
-      <svg className="w-28 h-28" viewBox="0 0 120 120" fill="none">
-        {/* Two people connected */}
-        <circle cx="42" cy="40" r="14" fill="white" opacity="0.12" />
-        <circle cx="42" cy="35" r="8" fill="white" opacity="0.15" />
-        <ellipse cx="42" cy="55" rx="14" ry="10" fill="white" opacity="0.12" />
-        <circle cx="78" cy="40" r="14" fill="white" opacity="0.12" />
-        <circle cx="78" cy="35" r="8" fill="white" opacity="0.15" />
-        <ellipse cx="78" cy="55" rx="14" ry="10" fill="white" opacity="0.12" />
-        {/* Connection line with heart */}
-        <line x1="52" y1="42" x2="68" y2="42" stroke="#D4AF6A" strokeWidth="2" opacity="0.4" strokeDasharray="4 3">
-          <animate attributeName="stroke-dashoffset" from="0" to="-14" dur="1.5s" repeatCount="indefinite" />
-        </line>
-        {/* Gift box */}
-        <rect x="42" y="72" width="36" height="28" rx="5" fill="white" opacity="0.15" />
-        <line x1="60" y1="72" x2="60" y2="100" stroke="white" strokeWidth="2" opacity="0.1" />
-        <rect x="42" y="72" width="36" height="8" rx="3" fill="#D4AF6A" opacity="0.2" />
-        {/* Ribbon */}
-        <path d="M56 72 L60 65 L64 72" stroke="#D4AF6A" strokeWidth="2" fill="none" opacity="0.3" />
-        {/* $10 */}
-        <text x="60" y="93" textAnchor="middle" fontSize="12" fill="white" fontWeight="bold" opacity="0.25">$10</text>
-        {/* Sparkles */}
-        <circle cx="30" cy="25" r="2" fill="#D4AF6A" opacity="0.3" />
-        <circle cx="95" cy="30" r="1.5" fill="white" opacity="0.2" />
-        <circle cx="100" cy="80" r="2" fill="#D4AF6A" opacity="0.2" />
-      </svg>
-    ),
-  },
-  {
-    id: "cashpickup",
-    gradient: "promo-gradient-3",
-    tag: "NOUVEAU",
-    title: "Cash Pickup",
-    subtitle: "+200 points de retrait en Algerie et Tunisie",
-    cta: "Voir les agents",
-    href: "/agents",
-    illustration: (
-      <svg className="w-28 h-28" viewBox="0 0 120 120" fill="none">
-        {/* Map pin */}
-        <path d="M60 15 C40 15 28 30 28 48 C28 70 60 100 60 100 C60 100 92 70 92 48 C92 30 80 15 60 15Z" fill="white" opacity="0.1" />
-        <circle cx="60" cy="45" r="14" fill="white" opacity="0.15" />
-        {/* Store/agent icon inside pin */}
-        <rect x="50" y="40" width="20" height="14" rx="2" fill="white" opacity="0.2" />
-        <path d="M48 40 L60 32 L72 40" stroke="white" strokeWidth="2" fill="none" opacity="0.2" />
-        {/* Cash bills */}
-        <rect x="20" y="70" width="30" height="18" rx="3" fill="white" opacity="0.12" transform="rotate(-15, 35, 79)" />
-        <rect x="70" y="68" width="30" height="18" rx="3" fill="white" opacity="0.12" transform="rotate(10, 85, 77)" />
-        {/* Coins */}
-        <circle cx="45" cy="90" r="8" fill="#D4AF6A" opacity="0.15" />
-        <circle cx="48" cy="87" r="8" fill="white" opacity="0.1" />
-        {/* Signal waves from pin */}
-        <circle cx="60" cy="45" r="24" stroke="white" strokeWidth="1" opacity="0.08" />
-        <circle cx="60" cy="45" r="34" stroke="white" strokeWidth="1" opacity="0.05" />
-        {/* +200 */}
-        <text x="85" y="55" fontSize="11" fill="white" fontWeight="bold" opacity="0.2">+200</text>
-      </svg>
-    ),
-  },
-];
+/* ---- Promo banners are now in /components/dashboard/PromoCarousel.tsx ---- */
 
 /* ---- Quick actions (Talabat category grid) ---- */
 const QUICK_ACTIONS = [
@@ -162,70 +78,17 @@ function AnimatedCounter({ value }: { value: number }) {
     }, 16);
     return () => clearInterval(timer);
   }, [value]);
-  return <>{displayed.toLocaleString()}</>;
+  return <>{displayed.toLocaleString("fr-CA")}</>;
 }
 
-/* ---- Promo Carousel (Snoonu style) ---- */
-function PromoCarousel({ locale }: { locale: string }) {
-  const [active, setActive] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval>>(null);
-
-  useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setActive((prev) => (prev + 1) % PROMO_BANNERS.length);
-    }, 5000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
-
-  const banner = PROMO_BANNERS[active];
-
-  return (
-    <div className="relative">
-      <Link href={`/${locale}${banner.href}`} className="block">
-        <div className={`${banner.gradient} rounded-2xl p-5 overflow-hidden relative min-h-[140px] card-press`}>
-          {/* Illustrated background */}
-          <div className="absolute right-1 top-1/2 -translate-y-1/2">
-            {banner.illustration}
-          </div>
-          {/* Content */}
-          <div className="relative z-10">
-            <span className="inline-block px-2 py-0.5 rounded-md bg-white/20 text-[10px] font-bold text-white tracking-wider mb-2">
-              {banner.tag}
-            </span>
-            <h3 className="text-2xl font-bold text-white mb-0.5 animate-slide-up">{banner.title}</h3>
-            <p className="text-sm text-white/80 mb-3">{banner.subtitle}</p>
-            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white">
-              {banner.cta}
-              <svg className="w-4 h-4 animate-swipe" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
-            </span>
-          </div>
-        </div>
-      </Link>
-      {/* Dots (Snoonu style) */}
-      <div className="flex items-center justify-center gap-1.5 mt-3">
-        {PROMO_BANNERS.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setActive(i)}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              i === active ? "w-6 bg-dz-green" : "w-1.5 bg-dz-border"
-            }`}
-            aria-label={`Banniere ${i + 1}`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
+/* ---- PromoCarousel is now imported from /components/dashboard/PromoCarousel ---- */
 
 /* ---- Live ticker (Uber/Binance style) ---- */
 function LiveTicker() {
   return (
     <div className="marquee-container rounded-xl bg-dz-dark/95 py-2 px-3">
       <div className="animate-ticker inline-flex gap-6 items-center">
-        {[...MOCK_RATES, ...MOCK_RATES].map((rate, i) => (
+        {[...LIVE_RATES, ...LIVE_RATES].map((rate, i) => (
           <span key={i} className="inline-flex items-center gap-2 text-xs whitespace-nowrap">
             <span className="text-white/50">{rate.from}/{rate.to}</span>
             <span className="font-bold text-white">{rate.rate}</span>
@@ -239,17 +102,39 @@ function LiveTicker() {
   );
 }
 
+/* ---- Animation variants ---- */
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+};
+
 /* ==== MAIN DASHBOARD ==== */
 export default function DashboardPage() {
   const { locale } = useParams<{ locale: string }>();
   const loc = (locale as string) || "fr";
-  const usedPercent = (MOCK_USER.monthlyUsed / MOCK_USER.monthlyLimit) * 100;
+  const kyc = useKycStore();
+
+  // Balance = monthly limit minus used (demo)
+  const balance = kyc.monthlyLimitCAD - kyc.monthlyUsedCAD;
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <motion.div
+      className="space-y-5"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
 
       {/* 1. Social proof bar (Uber) */}
-      <div className="flex items-center gap-2 px-1 animate-stagger-in stagger-1">
+      <motion.div variants={itemVariants} className="flex items-center gap-2 px-1">
         <div className="w-2 h-2 rounded-full bg-dz-success animate-live-dot" />
         <p className="text-xs text-dz-text-secondary">
           <span className="font-semibold text-dz-text"><AnimatedCounter value={1247} /></span> transferts aujourd&apos;hui
@@ -258,183 +143,43 @@ export default function DashboardPage() {
         <p className="text-xs text-dz-text-muted">
           <span className="font-semibold text-dz-success">$2.4M</span> envoyes cette semaine
         </p>
-      </div>
+      </motion.div>
 
-      {/* 2. Welcome hero — illustrated SVG scene */}
-      <div className="rounded-2xl overflow-hidden relative animate-stagger-in stagger-2">
-        {/* Illustrated background — original SVG scene */}
-        <div className="absolute inset-0">
-          <svg className="w-full h-full" viewBox="0 0 800 320" fill="none" preserveAspectRatio="xMidYMid slice">
-            {/* Sky gradient */}
-            <defs>
-              <linearGradient id="sky" x1="0" y1="0" x2="800" y2="320" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#003318" />
-                <stop offset="40%" stopColor="#004D26" />
-                <stop offset="100%" stopColor="#0a2f1a" />
-              </linearGradient>
-              <linearGradient id="goldBeam" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#B8923B" stopOpacity="0" />
-                <stop offset="50%" stopColor="#D4AF6A" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="#B8923B" stopOpacity="0" />
-              </linearGradient>
-              <linearGradient id="groundGrad" x1="0" y1="240" x2="0" y2="320" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#003318" stopOpacity="0" />
-                <stop offset="100%" stopColor="#001a0d" stopOpacity="0.5" />
-              </linearGradient>
-              <radialGradient id="glowGreen" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#00873E" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#00873E" stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="glowGold" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#D4AF6A" stopOpacity="0.25" />
-                <stop offset="100%" stopColor="#D4AF6A" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-            <rect width="800" height="320" fill="url(#sky)" />
-
-            {/* Stars / dots */}
-            <circle cx="120" cy="40" r="1.5" fill="white" opacity="0.3" />
-            <circle cx="300" cy="25" r="1" fill="white" opacity="0.2" />
-            <circle cx="500" cy="50" r="1.5" fill="white" opacity="0.25" />
-            <circle cx="680" cy="35" r="1" fill="white" opacity="0.3" />
-            <circle cx="750" cy="70" r="1.5" fill="white" opacity="0.15" />
-            <circle cx="50" cy="80" r="1" fill="white" opacity="0.2" />
-
-            {/* Stylized Canada (left) — CN Tower silhouette */}
-            <g opacity="0.15">
-              <rect x="80" y="130" width="4" height="110" rx="2" fill="white" />
-              <rect x="74" y="170" width="16" height="30" rx="3" fill="white" />
-              <circle cx="82" cy="150" r="8" fill="white" />
-              {/* Buildings */}
-              <rect x="50" y="200" width="18" height="40" rx="2" fill="white" />
-              <rect x="100" y="190" width="14" height="50" rx="2" fill="white" />
-              <rect x="120" y="210" width="20" height="30" rx="2" fill="white" />
-            </g>
-
-            {/* Stylized Algeria / Tunisia (right) — Mosque + Casbah */}
-            <g opacity="0.15">
-              {/* Minaret */}
-              <rect x="680" y="140" width="5" height="100" rx="2" fill="white" />
-              <circle cx="682.5" cy="140" r="6" fill="white" />
-              {/* Dome */}
-              <ellipse cx="720" cy="200" rx="25" ry="18" fill="white" />
-              <rect x="695" y="200" width="50" height="40" rx="2" fill="white" />
-              {/* Casbah buildings */}
-              <rect x="640" y="210" width="22" height="30" rx="2" fill="white" />
-              <rect x="750" y="195" width="18" height="45" rx="2" fill="white" />
-            </g>
-
-            {/* Transfer arc — golden corridor line */}
-            <path d="M 150 200 Q 400 60 650 200" stroke="url(#goldBeam)" strokeWidth="2.5" strokeDasharray="8 6" fill="none" opacity="0.8">
-              <animate attributeName="stroke-dashoffset" from="0" to="-28" dur="2s" repeatCount="indefinite" />
-            </path>
-
-            {/* Money packet traveling along the arc */}
-            <g opacity="0.9">
-              <circle r="10" fill="#D4AF6A" opacity="0.9">
-                <animateMotion dur="3s" repeatCount="indefinite" path="M 150 200 Q 400 60 650 200" />
-              </circle>
-              <text fontSize="8" fill="#003318" fontWeight="bold" textAnchor="middle" dy="3">
-                <animateMotion dur="3s" repeatCount="indefinite" path="M 150 200 Q 400 60 650 200" />
-                $
-              </text>
-            </g>
-
-            {/* Second arc — green (return flow) */}
-            <path d="M 650 220 Q 400 280 150 220" stroke="#00873E" strokeWidth="1.5" strokeDasharray="4 6" fill="none" opacity="0.3">
-              <animate attributeName="stroke-dashoffset" from="0" to="20" dur="3s" repeatCount="indefinite" />
-            </path>
-
-            {/* Globe glow left */}
-            <circle cx="150" cy="200" r="80" fill="url(#glowGreen)" />
-            {/* Globe glow right */}
-            <circle cx="650" cy="200" r="80" fill="url(#glowGold)" />
-
-            {/* Country circles — sender */}
-            <circle cx="150" cy="200" r="22" fill="#006633" stroke="white" strokeWidth="1.5" opacity="0.9" />
-            <text x="150" y="196" textAnchor="middle" fontSize="14" fill="white" dy="5">CA</text>
-
-            {/* Country circles — receiver */}
-            <circle cx="650" cy="200" r="22" fill="#B8923B" stroke="white" strokeWidth="1.5" opacity="0.9" />
-            <text x="650" y="196" textAnchor="middle" fontSize="14" fill="white" dy="5">DZ</text>
-
-            {/* Middle hub — DinarZone logo concept */}
-            <circle cx="400" cy="130" r="28" fill="#006633" stroke="#D4AF6A" strokeWidth="2" opacity="0.9" />
-            <text x="400" y="126" textAnchor="middle" fontSize="18" fill="white" fontWeight="bold" dy="5">DZ</text>
-
-            {/* Radiating connection lines from hub */}
-            <line x1="400" y1="158" x2="320" y2="250" stroke="#00873E" strokeWidth="1" opacity="0.2" strokeDasharray="3 4" />
-            <line x1="400" y1="158" x2="480" y2="250" stroke="#00873E" strokeWidth="1" opacity="0.2" strokeDasharray="3 4" />
-
-            {/* Small service icons along the arc */}
-            {/* Cash icon */}
-            <g transform="translate(280, 115)" opacity="0.5">
-              <rect width="24" height="16" rx="3" fill="white" />
-              <circle cx="12" cy="8" r="4" fill="#006633" />
-            </g>
-            {/* Phone/mobile icon */}
-            <g transform="translate(500, 115)" opacity="0.5">
-              <rect x="3" width="16" height="24" rx="3" fill="white" />
-              <circle cx="11" cy="20" r="2" fill="#006633" />
-              <rect x="7" y="3" width="8" height="12" rx="1" fill="#006633" opacity="0.3" />
-            </g>
-
-            {/* Ground gradient overlay */}
-            <rect y="240" width="800" height="80" fill="url(#groundGrad)" />
-
-            {/* Geometric patterns — Islamic star motif (subtle) */}
-            <g opacity="0.06" transform="translate(370, 250)">
-              <polygon points="0,-20 6,-7 20,-7 9,3 12,18 0,10 -12,18 -9,3 -20,-7 -6,-7" fill="white" />
-            </g>
-            <g opacity="0.04" transform="translate(200, 270)">
-              <polygon points="0,-15 5,-5 15,-5 7,2 9,14 0,8 -9,14 -7,2 -15,-5 -5,-5" fill="white" />
-            </g>
-            <g opacity="0.04" transform="translate(580, 265)">
-              <polygon points="0,-15 5,-5 15,-5 7,2 9,14 0,8 -9,14 -7,2 -15,-5 -5,-5" fill="white" />
-            </g>
-          </svg>
-        </div>
-
-        {/* Content overlay */}
-        <div className="relative z-10 p-5 sm:p-6">
-          <div className="flex items-start justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-white/15 border border-white/20 backdrop-blur-sm flex items-center justify-center animate-bounce-in">
-                <span className="text-lg font-bold text-white">{MOCK_USER.name[0]}</span>
-              </div>
-              <div>
-                <p className="text-white/50 text-[11px] font-medium uppercase tracking-widest">Bienvenue</p>
-                <h2 className="text-xl font-bold text-white">{MOCK_USER.name}</h2>
-              </div>
+      {/* 1b. Balance Card (Wallet style) */}
+      <motion.div variants={itemVariants} className="relative w-full rounded-3xl p-6 overflow-hidden shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#00A84D] to-[#070B14]" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+        <div className="relative z-10 flex flex-col gap-5">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-2 bg-black/20 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-lg">
+              <span className="w-2 h-2 rounded-full bg-[#00A84D] animate-pulse" />
+              <span className="text-xs font-bold text-white tracking-wider">CAD</span>
             </div>
-            <Badge color="gold">
-              <svg className="w-3 h-3 mr-0.5" viewBox="0 0 24 24" fill="currentColor">
-                <path fillRule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.749.749 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
-              </svg>
-              {MOCK_USER.kycLabel}
-            </Badge>
-          </div>
-
-          {/* Progress bar */}
-          <div className="relative">
-            <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-white/40 text-xs">Limite mensuelle</span>
-              <span className="text-white/90 text-xs font-semibold">
-                $<AnimatedCounter value={MOCK_USER.monthlyUsed} /> / ${MOCK_USER.monthlyLimit.toLocaleString()} CAD
-              </span>
-            </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
-              <div
-                className="h-full bg-gradient-to-r from-dz-gold to-dz-gold-light rounded-full transition-all duration-1000 ease-out progress-animated"
-                style={{ width: `${usedPercent}%` }}
-              />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#B8923B] to-[#9A7A31] flex items-center justify-center text-[#070B14] font-black text-xs shadow-lg">
+              DZ
             </div>
           </div>
+          <div>
+            <p className="text-sm text-white/80 font-medium mb-1">Solde disponible</p>
+            <h2 className="text-4xl font-bold text-white tabular-nums tracking-tight">
+              ${balance.toLocaleString("fr-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </h2>
+          </div>
         </div>
-      </div>
+      </motion.div>
+
+      {/* 2. Welcome hero — premium card */}
+      <motion.div variants={itemVariants}>
+        <HeroWelcomeCard
+          userName="Karim"
+          monthlyLimit={kyc.monthlyLimitCAD}
+          monthlyUsed={kyc.monthlyUsedCAD}
+          kycLabel={kyc.tierLabel}
+        />
+      </motion.div>
 
       {/* 3. Quick Actions - Talabat category grid */}
-      <div className="animate-stagger-in stagger-3">
+      <motion.div variants={itemVariants}>
         <div className="grid grid-cols-4 gap-2.5">
           {QUICK_ACTIONS.map((action) => (
             <Link key={action.flag} href={`/${loc}${action.href}`}>
@@ -457,15 +202,15 @@ export default function DashboardPage() {
             Envoyer de l&apos;argent
           </Button>
         </Link>
-      </div>
+      </motion.div>
 
-      {/* 4. Promo carousel (Snoonu/Talabat) */}
-      <div className="animate-stagger-in stagger-4">
+      {/* 4. Promo carousel — horizontal scroll snap */}
+      <motion.div variants={itemVariants}>
         <PromoCarousel locale={loc} />
-      </div>
+      </motion.div>
 
       {/* 5. Live rates ticker (Binance/Trading style) */}
-      <div className="animate-stagger-in stagger-5">
+      <motion.div variants={itemVariants}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-dz-success animate-live-dot" />
@@ -479,7 +224,7 @@ export default function DashboardPage() {
 
         {/* Expanded rate cards below */}
         <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-4 px-4 mt-3 scrollbar-none">
-          {MOCK_RATES.map((rate, i) => (
+          {LIVE_RATES.map((rate, i) => (
             <Link key={`${rate.from}-${rate.to}`} href={`/${loc}/send?from=${rate.from}&to=${rate.to}`}>
               <div className={`card-lift flex-shrink-0 w-[150px] rounded-2xl bg-white border border-dz-border/30 p-3.5 animate-stagger-in stagger-${i + 1}`}>
                 <div className="flex items-center gap-1.5 mb-2">
@@ -508,10 +253,10 @@ export default function DashboardPage() {
             </Link>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* 6. In-app ad space — Illustrated savings banner */}
-      <div className="animate-stagger-in stagger-6">
+      <motion.div variants={itemVariants}>
         <div className="rounded-2xl bg-gradient-to-r from-amber-50 via-white to-dz-cream border border-dz-gold/20 p-4 flex items-center gap-3 card-press overflow-hidden relative">
           {/* SVG illustration — bank vs DinarZone comparison */}
           <div className="w-16 h-16 flex-shrink-0 relative">
@@ -549,10 +294,15 @@ export default function DashboardPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
         </div>
-      </div>
+      </motion.div>
 
-      {/* 7. Recent transfers — Uber activity feed */}
-      <div className="animate-stagger-in stagger-7">
+      {/* 7. Repeat transfer — 3-click flow */}
+      <motion.div variants={itemVariants}>
+        <RepeatTransferCard />
+      </motion.div>
+
+      {/* 8. Recent transfers — Uber activity feed */}
+      <motion.div variants={itemVariants}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-semibold text-dz-text-muted uppercase tracking-wider">
             Activite recente
@@ -588,7 +338,9 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-bold text-dz-text">{transfer.amount}</p>
+                    <p className={`text-sm font-bold tabular-nums ${transfer.isDebit ? "text-dz-text" : "text-dz-success"}`}>
+                      {transfer.isDebit ? "- " : "+ "}{transfer.amount}
+                    </p>
                     <Badge color={statusInfo.color}>{statusInfo.label}</Badge>
                   </div>
                 </div>
@@ -596,10 +348,10 @@ export default function DashboardPage() {
             );
           })}
         </Card>
-      </div>
+      </motion.div>
 
-      {/* 8. Feature cards grid (Snoonu bottom section) */}
-      <div className="grid grid-cols-2 gap-3 animate-stagger-in stagger-8">
+      {/* 9. Feature cards grid (Snoonu bottom section) */}
+      <motion.div variants={itemVariants} className="grid grid-cols-2 gap-3">
         <Link href={`/${loc}/agents`}>
           <div className="card-lift rounded-2xl bg-white border border-dz-border/30 p-4 h-full">
             <div className="w-10 h-10 rounded-xl bg-dz-green/8 flex items-center justify-center mb-3">
@@ -645,10 +397,10 @@ export default function DashboardPage() {
             <p className="text-[11px] text-dz-text-muted leading-relaxed">$10 par parrainage</p>
           </div>
         </Link>
-      </div>
+      </motion.div>
 
-      {/* 9. Bottom marketing space — App rating CTA (Uber style) */}
-      <div className="rounded-2xl bg-dz-dark p-5 text-center animate-stagger-in stagger-8">
+      {/* 10. Bottom marketing space — App rating CTA (Uber style) */}
+      <motion.div variants={itemVariants} className="rounded-2xl bg-dz-dark p-5 text-center">
         <div className="flex justify-center mb-2">
           {[1, 2, 3, 4, 5].map((star) => (
             <svg key={star} className="w-5 h-5 text-dz-gold" viewBox="0 0 24 24" fill="currentColor">
@@ -664,10 +416,10 @@ export default function DashboardPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
           </svg>
         </button>
-      </div>
+      </motion.div>
 
       {/* Extra bottom spacing for bottom nav */}
       <div className="h-4" />
-    </div>
+    </motion.div>
   );
 }

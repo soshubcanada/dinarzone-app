@@ -1,9 +1,14 @@
 import { z } from "zod";
 
+const VALID_COUNTRIES = ["CA", "DZ", "TN", "QA", "AE"] as const;
+
 export const corridorSchema = z.object({
-  fromCountry: z.string().length(2, "Pays d'envoi requis"),
-  toCountry: z.string().length(2, "Pays de reception requis"),
-});
+  fromCountry: z.enum(VALID_COUNTRIES, { errorMap: () => ({ message: "Pays d'envoi invalide" }) }),
+  toCountry: z.enum(VALID_COUNTRIES, { errorMap: () => ({ message: "Pays de destination invalide" }) }),
+}).refine(
+  (data) => data.fromCountry !== data.toCountry,
+  { message: "Les pays d'envoi et de destination doivent etre differents" }
+);
 
 export const amountSchema = z.object({
   sendAmount: z.number().positive("Le montant doit etre positif").max(10000, "Montant maximum depasse"),
@@ -25,14 +30,23 @@ export const deliverySchema = z.object({
   ]),
 });
 
+// IBAN: basic structure validation (2 letter country + 2 check digits + BBAN)
+const ibanSchema = z
+  .string()
+  .regex(/^[A-Z]{2}\d{2}[A-Z0-9]{4,30}$/, "Format IBAN invalide")
+  .optional();
+
 export const recipientSchema = z.object({
-  fullName: z.string().min(2, "Nom du beneficiaire requis").max(100),
-  phone: z.string().optional(),
-  // Conditional fields based on delivery method
-  accountNumber: z.string().optional(), // CCP, BaridiMob, bank account
-  bankName: z.string().optional(),
-  iban: z.string().optional(),
-  agentId: z.string().optional(), // For cash pickup
+  fullName: z
+    .string()
+    .min(2, "Nom du beneficiaire requis")
+    .max(100)
+    .regex(/^[\p{L}\s'-]+$/u, "Caracteres invalides"),
+  phone: z.string().regex(/^\+?[1-9]\d{6,14}$/).optional(),
+  accountNumber: z.string().max(30).regex(/^[0-9\s]*$/, "Numero de compte invalide").optional(),
+  bankName: z.string().max(100).optional(),
+  iban: ibanSchema,
+  agentId: z.string().uuid("ID agent invalide").optional(),
 }).refine(
   (data) => {
     // At least one account identifier must be provided

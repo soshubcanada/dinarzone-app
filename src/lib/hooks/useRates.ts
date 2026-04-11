@@ -3,9 +3,13 @@
 import { useEffect, useState, useCallback } from "react";
 
 interface Rate {
+  corridor_code: string;
   from: string;
   to: string;
-  rate: number;
+  mid_market_rate: number;
+  dz_rate: number;
+  margin_percent: number;
+  fee_flat: number;
   fee_percent: number;
   min_amount: number;
   max_amount: number;
@@ -33,7 +37,7 @@ export function useRates() {
       if (!res.ok) throw new Error("Erreur taux");
       const data = await res.json();
       setState({
-        rates: data.rates,
+        rates: data.corridors,
         updatedAt: data.updated_at,
         loading: false,
         error: null,

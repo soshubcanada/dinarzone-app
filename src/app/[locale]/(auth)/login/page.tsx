@@ -2,24 +2,61 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const { locale } = useParams<{ locale: string }>();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || `/${locale}/dashboard`;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    // Mock login - will connect to Supabase later
-    setTimeout(() => {
+
+    const supabase = createClient();
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (signInError) {
       setLoading(false);
-      window.location.href = `/${locale}/dashboard`;
-    }, 1500);
+      // Map Supabase errors to French user-friendly messages
+      const msg = signInError.message.toLowerCase();
+      if (msg.includes("invalid login credentials")) {
+        setError("Email ou mot de passe incorrect.");
+      } else if (msg.includes("email not confirmed")) {
+        setError("Veuillez confirmer votre adresse e-mail.");
+      } else if (msg.includes("too many")) {
+        setError("Trop de tentatives. Réessayez dans quelques minutes.");
+      } else {
+        setError("Une erreur est survenue. Réessayez.");
+      }
+      return;
+    }
+
+    // Check if user has MFA factors enrolled — if yes, redirect to /verify
+    const { data: factorsData } = await supabase.auth.mfa.listFactors();
+    const hasVerifiedTotp = factorsData?.totp?.some((f) => f.status === "verified");
+
+    if (hasVerifiedTotp) {
+      // User has 2FA enabled — must complete MFA challenge
+      router.push(`/${locale}/verify?redirect=${encodeURIComponent(redirectTo)}`);
+      return;
+    }
+
+    // No MFA → go straight to dashboard (or requested redirect)
+    router.push(redirectTo);
+    router.refresh();
   };
 
   return (
@@ -39,6 +76,15 @@ export default function LoginPage() {
       <p className="text-sm text-dz-text-muted mb-8">
         Envoyez de l&apos;argent a vos proches, simplement et en toute securite.
       </p>
+
+      {error && (
+        <div
+          role="alert"
+          className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+        >
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <Input

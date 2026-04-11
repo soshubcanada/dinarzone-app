@@ -1,7 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
+import Stripe from "stripe";
 import { createTransferSchema } from "@/lib/schemas/transfer";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+let stripeClient: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!stripeClient) {
+    stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: "2026-03-25.dahlia",
+    });
+  }
+  return stripeClient;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,21 +27,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll: () => cookieStore.getAll(),
-          setAll: (cookiesToSet) => {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          },
-        },
-      }
-    );
+    const supabase = await createServerSupabaseClient();
 
     // Verify user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -39,8 +37,48 @@ export async function POST(request: NextRequest) {
 
     const { corridor, amount, delivery, recipient } = parsed.data;
 
+    // Server-side KYC limit check
+    const { data: canSend } = await supabase.rpc("can_user_send", {
+      p_user_id: user.id,
+      p_amount_cad: amount.sendAmount,
+    });
+
+    if (canSend === false) {
+      return NextResponse.json(
+        { error: "Limite KYC mensuelle depassee", code: "KYC_LIMIT_EXCEEDED" },
+        { status: 403 }
+      );
+    }
+
+    // Validate rate lock if provided
+    const rateLockId = body.rateLockId as string | undefined;
+    if (rateLockId) {
+      const { data: lock } = await supabase
+        .from("rate_locks")
+        .select("*")
+        .eq("id", rateLockId)
+        .eq("user_id", user.id)
+        .eq("used", false)
+        .single();
+
+      if (!lock || new Date(lock.expires_at) < new Date()) {
+        return NextResponse.json(
+          { error: "Taux expire — veuillez regenerer un devis", code: "RATE_EXPIRED" },
+          { status: 409 }
+        );
+      }
+    }
+
+    // Resolve corridor DB id
+    const corridorCode = `${corridor.fromCountry}-${corridor.toCountry}`;
+    const { data: corridorRow } = await supabase
+      .from("currency_corridors")
+      .select("id, mid_market_rate, dz_margin_percent")
+      .eq("corridor_code", corridorCode)
+      .single();
+
     // Generate tracking code
-    const trackingCode = `DZ-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    const trackingCode = `DZ-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().substring(0, 6).toUpperCase()}`;
 
     // Create transfer record
     const { data: transfer, error: dbError } = await supabase
@@ -61,6 +99,11 @@ export async function POST(request: NextRequest) {
         recipient_phone: recipient.phone,
         recipient_account: recipient.accountNumber || recipient.iban,
         status: "pending_payment",
+        corridor_id: corridorRow?.id ?? null,
+        rate_lock_id: rateLockId ?? null,
+        mid_market_rate: corridorRow ? Number(corridorRow.mid_market_rate) : null,
+        dz_margin_applied: corridorRow ? Number(corridorRow.dz_margin_percent) : null,
+        fee_breakdown: body.feeBreakdown ?? null,
       })
       .select()
       .single();
@@ -72,12 +115,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Mark rate lock as used
+    if (rateLockId) {
+      await supabase
+        .from("rate_locks")
+        .update({ used: true, transfer_id: transfer.id })
+        .eq("id", rateLockId);
+    }
+
+    // Create Stripe PaymentIntent
+    const totalToCharge = amount.sendAmount + amount.fee;
+    const paymentIntent = await getStripe().paymentIntents.create({
+      amount: Math.round(totalToCharge * 100), // Stripe uses cents
+      currency: amount.sendCurrency.toLowerCase(),
+      metadata: {
+        transfer_id: transfer.id,
+        tracking_code: trackingCode,
+        user_id: user.id,
+        corridor: corridorCode,
+      },
+    });
+
+    // Store Stripe payment ID on the transfer
+    await supabase
+      .from("transfers")
+      .update({ stripe_payment_id: paymentIntent.id })
+      .eq("id", transfer.id);
+
     return NextResponse.json({
       success: true,
       transfer: {
         id: transfer.id,
         trackingCode,
         status: "pending_payment",
+        clientSecret: paymentIntent.client_secret,
       },
     });
   } catch {
@@ -90,21 +161,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll: () => cookieStore.getAll(),
-          setAll: (cookiesToSet) => {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          },
-        },
-      }
-    );
+    const supabase = await createServerSupabaseClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -113,8 +170,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const offset = parseInt(searchParams.get("offset") || "0");
+    const rawLimit = parseInt(searchParams.get("limit") || "20");
+    const rawOffset = parseInt(searchParams.get("offset") || "0");
+    const limit = Math.min(Math.max(isNaN(rawLimit) ? 20 : rawLimit, 1), 100);
+    const offset = Math.max(isNaN(rawOffset) ? 0 : rawOffset, 0);
 
     let query = supabase
       .from("transfers")

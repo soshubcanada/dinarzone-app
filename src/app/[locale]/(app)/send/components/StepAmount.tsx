@@ -3,27 +3,10 @@
 import { useState, useMemo } from "react";
 import { useTransferWizard } from "@/lib/hooks/useTransferWizard";
 import { CORRIDORS } from "@/lib/constants/corridors";
+import { getQuote } from "@/lib/engine/rates";
 import CurrencyInput from "@/components/ui/CurrencyInput";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-
-// Mock exchange rates
-const MOCK_RATES: Record<string, number> = {
-  "CAD-DZD": 99.5,
-  "CAD-TND": 2.28,
-  "CAD-QAR": 2.72,
-  "CAD-AED": 2.74,
-  "QAR-DZD": 37.2,
-  "QAR-TND": 0.85,
-  "QAR-AED": 1.01,
-  "AE-DZD": 36.8,
-  "AED-DZD": 36.8,
-  "AED-TND": 0.84,
-  "DZD-TND": 0.023,
-};
-
-const BASE_FEE = 4.99;
-const BANK_MARKUP = 0.04; // 4% typical bank markup for comparison
 
 export default function StepAmount() {
   const wizard = useTransferWizard();
@@ -31,26 +14,17 @@ export default function StepAmount() {
   const [showFeeDetails, setShowFeeDetails] = useState(false);
 
   const corridor = CORRIDORS.find((c) => c.id === wizard.corridorId);
-  const rateKey = `${wizard.sendCurrency}-${wizard.receiveCurrency}`;
-  const rate = MOCK_RATES[rateKey] || 1;
 
-  const receiveAmount = useMemo(
-    () => Math.round(sendAmount * rate * 100) / 100,
-    [sendAmount, rate]
+  const quote = useMemo(
+    () => getQuote(wizard.corridorId, sendAmount),
+    [wizard.corridorId, sendAmount]
   );
 
-  const fee = BASE_FEE;
-  const totalCharged = sendAmount + fee;
-
-  // Bank comparison savings
-  const bankReceive = useMemo(
-    () => Math.round(sendAmount * rate * (1 - BANK_MARKUP) * 100) / 100,
-    [sendAmount, rate]
-  );
-  const savings = useMemo(
-    () => Math.round((receiveAmount - bankReceive) * 100) / 100,
-    [receiveAmount, bankReceive]
-  );
+  const rate = quote?.dzRate ?? 1;
+  const receiveAmount = quote?.receiveAmount ?? 0;
+  const fee = quote?.fees.totalFee ?? 0;
+  const totalCharged = quote?.totalCharged ?? 0;
+  const savings = quote?.savings ?? 0;
 
   const isValid = sendAmount >= (corridor?.minAmount || 10);
 
@@ -122,7 +96,7 @@ export default function StepAmount() {
             <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm.53 5.47a.75.75 0 00-1.06 0l-3 3a.75.75 0 101.06 1.06l1.72-1.72v5.69a.75.75 0 001.5 0v-5.69l1.72 1.72a.75.75 0 101.06-1.06l-3-3z" clipRule="evenodd" />
           </svg>
           <span className="text-sm font-medium text-dz-success">
-            Vous economisez {savings.toLocaleString()} {wizard.receiveCurrency} par rapport aux banques
+            Vous economisez {savings.toLocaleString("fr-CA")} {wizard.receiveCurrency} par rapport aux banques
           </span>
         </div>
       )}
@@ -183,7 +157,7 @@ export default function StepAmount() {
       {/* Min/Max info */}
       {corridor && (
         <p className="text-[11px] text-dz-text-muted text-center">
-          Min: ${corridor.minAmount} {wizard.sendCurrency} &middot; Max: ${corridor.maxAmount.toLocaleString()} {wizard.sendCurrency}
+          Min: ${corridor.minAmount} {wizard.sendCurrency} &middot; Max: ${corridor.maxAmount.toLocaleString("fr-CA")} {wizard.sendCurrency}
         </p>
       )}
 
